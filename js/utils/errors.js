@@ -1,7 +1,12 @@
+// A message that is safe to show to the user as-is (optionally tied to form fields).
+export class UserError extends Error {
+  constructor(message, fieldErrors = null) { super(message); this.fieldErrors = fieldErrors; }
+}
+
 // Turn Supabase/Postgres errors into short, user-safe messages.
 export function friendlyError(err) {
   if (!err) return 'Something went wrong.';
-  if (err.code === 'CONFLICT') return err.message;
+  if (err instanceof UserError || err.code === 'CONFLICT') return err.message;
   switch (err.code) {
     case '23505': return 'A record with the same details already exists.';
     case '23503': return 'This record is linked to other records and cannot be changed or removed.';

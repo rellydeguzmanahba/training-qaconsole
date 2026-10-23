@@ -62,3 +62,27 @@ dialog.modal::backdrop{background:rgba(20,28,34,.45)}
 
 .skeleton{height:14px;border-radius:6px;background:linear-gradient(90deg,#eceef0,#f5f6f7,#eceef0);background-size:200% 100%;animation:sk 1.2s linear infinite}
 @keyframes sk{to{background-position:-200% 0}}
+
+/* ---- Phase 6 additions ---- */
+.th-btn{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+.th-btn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--border);font-size:.85rem;color:var(--muted)}
+dialog.modal--wide{max-width:min(760px,calc(100vw - 32px))}
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:10px 14px;border:0;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--green);color:var(--green-dark);font-weight:600}
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 24px;margin:0}
+.dl dt{font-size:.8rem;color:var(--muted)}
+.dl dd{margin:0;font-weight:500;word-break:break-word}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border)}
+.back-link{display:inline-block;margin-bottom:8px;text-decoration:none;color:var(--muted)}
+.cell-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ---- Phase 7 additions ---- */
+.checks--scroll{display:grid;gap:6px;max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px}
+.bar{height:8px;background:var(--bg);border:1px solid var(--border);border-radius:99px;overflow:hidden;min-width:100px}
+.bar>span{display:block;height:100%;background:var(--green)}
+.matrix th:first-child,.matrix td:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--border)}
+.matrix th,.matrix td{white-space:nowrap;text-align:left}
+.matrix th{vertical-align:bottom;white-space:normal;min-width:96px;max-width:140px}
+.matrix th:first-child{min-width:180px;background:#fafbfb}

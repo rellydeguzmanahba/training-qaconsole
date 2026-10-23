@@ -20,6 +20,7 @@ function makeInput(f, value) {
     t.value = value ?? '';
     return t;
   }
+  if (f.type === 'file') return el('input', { class: 'input', type: 'file', id, name: f.name, accept: f.accept });
   if (f.type === 'checkbox') {
     const c = el('input', { type: 'checkbox', id, name: f.name, disabled: f.disabled });
     c.checked = !!value;
@@ -27,13 +28,27 @@ function makeInput(f, value) {
   }
   if (f.type === 'checks') {
     const set = new Set((value || []).map(String));
-    const box = el('div', { class: 'row', role: 'group', 'aria-label': f.label });
+    const labels = [];
+    const box = el('div', { class: f.scroll ? 'checks--scroll' : 'row', role: 'group', 'aria-label': f.label });
     for (const o of f.options || []) {
       const cb = el('input', { type: 'checkbox', value: String(o.value) });
       cb.checked = set.has(String(o.value));
-      box.append(el('label', { class: 'row small', style: 'gap:6px;font-weight:400' }, cb, o.label));
+      const lab = el('label', { class: 'row small', style: 'gap:6px;font-weight:400' }, cb, o.label);
+      labels.push([lab, cb, String(o.label).toLowerCase()]);
+      box.append(lab);
     }
-    return box;
+    if (!f.scroll) return box;
+    // long lists: filter box + select all / clear (only visible rows are affected)
+    const q = el('input', { class: 'input', type: 'search', placeholder: 'Filter…', 'aria-label': `Filter ${f.label}` });
+    q.addEventListener('input', () => { const t = q.value.trim().toLowerCase(); labels.forEach(([l, , txt]) => { l.hidden = !!t && !txt.includes(t); }); });
+    q.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+    const setVisible = (on) => labels.forEach(([l, cb]) => { if (!l.hidden) cb.checked = on; });
+    const wrap = el('div', { class: 'stack', style: 'gap:8px' },
+      el('div', { class: 'row' }, q,
+        el('button', { type: 'button', class: 'btn btn--sm', onclick: () => { setVisible(true); wrap.dispatchEvent(new Event('change', { bubbles: true })); } }, 'Select shown'),
+        el('button', { type: 'button', class: 'btn btn--sm', onclick: () => { setVisible(false); wrap.dispatchEvent(new Event('change', { bubbles: true })); } }, 'Clear shown')),
+      box);
+    return wrap;
   }
   const i = el('input', { class: 'input', type: f.type || 'text', id, name: f.name, maxlength: f.maxlength,
     min: f.min, max: f.max, step: f.step, autocomplete: 'off', disabled: f.disabled });
@@ -43,6 +58,7 @@ function makeInput(f, value) {
 
 function readValue(f, node) {
   switch (f.type) {
+    case 'file': return node.files?.[0] || null;
     case 'checkbox': return node.checked;
     case 'checks': return [...node.querySelectorAll('input:checked')].map((i) => i.value);
     case 'number': { const v = node.value.trim(); return v === '' ? null : Number(v); }
@@ -137,7 +153,8 @@ export function formModal({ title, fields, values = {}, submitText = 'Save', wid
           dlg.close('saved');
         } catch (err) {
           if (err?.fieldErrors) showErrors(err.fieldErrors);
-          if (!err?.fieldErrors || err.message) { alertBox.textContent = friendlyError(err); alertBox.hidden = false; }
+          const msg = friendlyError(err);
+          if (msg) { alertBox.textContent = msg; alertBox.hidden = false; }
         }
       });
     });
