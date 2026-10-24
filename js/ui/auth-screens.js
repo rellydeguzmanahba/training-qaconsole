@@ -4,15 +4,34 @@ import { guarded } from '../utils/submit.js';
 const brand = () => el('span', { class: 'brand-mark', 'aria-hidden': 'true' }, 'A');
 
 function logoScene() {
-  // Exact logo artwork, not a reconstructed 3D model.
-  const logo = el('img', {
-    src: 'assets/images/ahba-training-qa-logo.webp',
-    alt: 'AHBA Development — Training & QA',
-    class: 'login-logo',
-    draggable: 'false',
-    decoding: 'async'
+  const stage = el('div', { class: 'login-logo-stage' });
+  const canvas = el('canvas', { class: 'login-three-canvas', 'aria-hidden': 'true' });
+  const fallback = el('img', { src: 'assets/images/ahba-training-qa-official.png', alt: 'AHBA Development — Training & QA', class: 'login-logo-fallback-image', draggable: 'false', hidden: true });
+  const subtitle = el('div', { class: 'login-qa-subtitle' });
+  'Training & QA'.split('').forEach((letter, index) => {
+    const span = el('span', { class: 'login-qa-letter' }, letter === ' ' ? '\u00a0' : letter);
+    span.style.setProperty('--letter', index);
+    subtitle.append(span);
   });
-  return el('div', { class: 'login-logo-stage' }, logo);
+  stage.append(canvas, fallback, subtitle);
+  const showFallback = () => { canvas.hidden = true; subtitle.hidden = true; fallback.hidden = false; };
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    showFallback();
+  } else {
+    const load = () => import('../login/corporate-3d.js').then(({ startCorporateLogo }) => {
+      if (!stage.isConnected) return;
+      startCorporateLogo(canvas);
+    }).catch(error => { console.warn('Corporate 3D unavailable:', error); showFallback(); });
+    if (window.THREE) load();
+    else {
+      const library = document.createElement('script');
+      library.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js';
+      library.onload = load;
+      library.onerror = showFallback;
+      document.head.append(library);
+    }
+  }
+  return stage;
 }
 
 export function renderLogin(root, { onSubmit }) {
