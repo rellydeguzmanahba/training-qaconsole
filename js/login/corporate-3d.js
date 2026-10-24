@@ -188,7 +188,7 @@ export function startCorporateLogo(canvas) {
     if(w===width&&h===height)return;
     width=w;height=h;
     renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));renderer.setSize(w,h,false);
-    camera.aspect=w/h;camera.fov=w/h<1.5?54:42;camera.updateProjectionMatrix();
+    camera.aspect=w/h;camera.fov=40;camera.updateProjectionMatrix();
   };
   function frame(now){
     if(disposed||!canvas.isConnected){dispose();return;}
@@ -211,7 +211,9 @@ export function startCorporateLogo(canvas) {
       arr[p*3+2]=pS[p*3+2]+(pE[p*3+2]-pS[p*3+2])*e;
     }
     pGeo.attributes.position.needsUpdate=true;
-    camera.position.set(0,1,window.innerWidth<760?48:39);
+    // Responsive fit: account for aspect ratio, not just viewport width.
+    const d = Math.max(17.5, 12.0 / Math.max(0.52, camera.aspect));
+    camera.position.set(0,1,d);
     camera.lookAt(0,0,0);
     renderer.render(scene,camera);
     raf=requestAnimationFrame(frame);

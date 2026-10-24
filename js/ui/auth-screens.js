@@ -52,8 +52,11 @@ export function renderLogin(root, { onSubmit }) {
       if (msg) { err.textContent = msg; err.hidden = false; pass.value = ''; pass.focus(); }
     });
   });
+  const scene = logoScene();
+  const visual = el('div', { class: 'login-visual' }, el('p', { class: 'login-visual-note' }, 'Training • Quality Assurance • Continuous Improvement'));
+  const intro = el('div', { class: 'login-intro', role: 'presentation' }, scene);
   root.replaceChildren(el('section', { class: 'login-shell' },
-    el('div', { class: 'login-visual' }, logoScene(), el('p', { class: 'login-visual-note' }, 'Training • Quality Assurance • Continuous Improvement')),
+    visual,
     el('div', { class: 'login-panel' },
       el('div', { class: 'login-panel-inner' },
         el('div', { class: 'login-eyebrow' }, 'AHBA DEVELOPMENT'),
@@ -63,9 +66,19 @@ export function renderLogin(root, { onSubmit }) {
         el('p', { class: 'login-help' }, 'Authorized personnel only. Contact your administrator if you need access.')
       )
     )
-  ));
-  email.focus();
+  ), intro);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finish = () => {
+    if (!intro.isConnected) return;
+    visual.prepend(scene);
+    intro.remove();
+    root.querySelector('.login-shell')?.classList.add('login-ready');
+    email.focus();
+  };
+  if (reduced) finish();
+  else window.setTimeout(finish, 5200);
 }
+
 
 export function renderNotice(root, { title, message, actions = [] }) {
   root.replaceChildren(el('div', { class: 'auth-card' },
