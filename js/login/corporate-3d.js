@@ -211,7 +211,7 @@ export function startCorporateLogo(canvas) {
       arr[p*3+2]=pS[p*3+2]+(pE[p*3+2]-pS[p*3+2])*e;
     }
     pGeo.attributes.position.needsUpdate=true;
-    camera.position.set(0,1,window.innerWidth<760?48:39);
+    camera.position.set(0,1,window.innerWidth<760?28:22);
     camera.lookAt(0,0,0);
     renderer.render(scene,camera);
     raf=requestAnimationFrame(frame);
