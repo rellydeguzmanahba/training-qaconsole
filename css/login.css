@@ -4,11 +4,13 @@
 .login-visual{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:54px 35px;background:radial-gradient(ellipse at 50% 40%,#fff 10%,#eef6f0 85%);overflow:hidden}
 .login-logo-stage{width:min(95%,750px);perspective:1100px;cursor:default;animation:login-rise .85s both}
 .login-logo-inner{transform-style:preserve-3d;will-change:transform;animation:login-float 6s ease-in-out infinite}
-.login-logo-svg{display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 18px 14px rgba(19,83,40,.12))}
-.login-a-left,.login-a-right,.login-arch,.login-arch-secondary,.login-arrow{stroke-dasharray:1100;stroke-dashoffset:1100;animation:login-draw 1.2s cubic-bezier(.22,.7,.2,1) forwards}
-.login-a-left{animation-delay:.25s}.login-a-right{animation-delay:.8s}.login-arch{animation-duration:1.7s;animation-delay:1.65s}.login-arch-secondary{animation-duration:1.4s;animation-delay:2.05s}.login-arrow{animation-duration:.75s;animation-delay:2.9s}
-.login-wordmark{fill:#6b6a0a;stroke:#fff;stroke-width:4px;paint-order:stroke;stroke-linejoin:round;font-family:Impact,'Arial Narrow',sans-serif;font-size:86px;font-weight:900;letter-spacing:-1px;opacity:0;animation:login-word-in .8s ease-out 3.25s forwards}
-.login-subtitle{fill:#0d2a15;font:700 35px system-ui,sans-serif;letter-spacing:8px;opacity:0;clip-path:inset(0 100% 0 0);animation:login-type 1.5s steps(13,end) 4.1s forwards}
+
+.login-three-canvas{display:block;width:100%;height:clamp(280px,38vw,500px);background:transparent}
+.login-qa-subtitle{display:flex;justify-content:center;align-items:center;min-height:45px;font-weight:800;letter-spacing:.12em;color:#6b6a0a;font-size:clamp(17px,2vw,27px);white-space:nowrap}
+.login-qa-letter{display:inline-block;opacity:0;transform:translateY(10px);animation:qa-type .22s ease-out forwards;animation-delay:calc(3.8s + var(--letter)*.095s)}
+.login-logo-fallback{font-size:clamp(28px,4vw,48px);font-weight:800;text-align:center;color:#6b6a0a;padding:130px 0}
+@keyframes qa-type{to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.login-qa-letter{animation:none;opacity:1;transform:none}}
 .login-visual-note{color:#577263;font-size:12px;letter-spacing:.1em;text-transform:uppercase;text-align:center;margin-top:12px}
 .login-panel{display:flex;align-items:center;justify-content:center;background:#fff;padding:52px clamp(28px,5vw,90px);border-left:1px solid #e6eee8}
 .login-panel-inner{width:100%;max-width:420px}.login-eyebrow{font-size:12px;letter-spacing:.17em;font-weight:750;color:#1e7a46;margin-bottom:18px}
