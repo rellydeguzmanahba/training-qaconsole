@@ -211,9 +211,13 @@ export function startCorporateLogo(canvas) {
       arr[p*3+2]=pS[p*3+2]+(pE[p*3+2]-pS[p*3+2])*e;
     }
     pGeo.attributes.position.needsUpdate=true;
+<<<<<<< HEAD
     // Responsive fit: account for aspect ratio, not just viewport width.
     const d = Math.max(17.5, 12.0 / Math.max(0.52, camera.aspect));
     camera.position.set(0,1,d);
+=======
+    camera.position.set(0,1,window.innerWidth<760?28:22);
+>>>>>>> 5481ee098350e79475b957ada288d106a9ce7aa3
     camera.lookAt(0,0,0);
     renderer.render(scene,camera);
     raf=requestAnimationFrame(frame);
