@@ -4,31 +4,15 @@ import { guarded } from '../utils/submit.js';
 const brand = () => el('span', { class: 'brand-mark', 'aria-hidden': 'true' }, 'A');
 
 function logoScene() {
-  const stage = el('div', { class: 'login-logo-stage' });
-  const canvas = el('canvas', { class: 'login-three-canvas', 'aria-hidden': 'true' });
-  // The supplied transparent image is the final visual authority: no retyped wordmark.
-  const official = el('img', {
-    src: 'assets/images/ahba-training-qa-official.png',
+  // Exact logo artwork, not a reconstructed 3D model.
+  const logo = el('img', {
+    src: 'assets/images/ahba-training-qa-logo.webp',
     alt: 'AHBA Development — Training & QA',
-    class: 'login-official-logo', draggable: 'false'
+    class: 'login-logo',
+    draggable: 'false',
+    decoding: 'async'
   });
-  stage.append(canvas, official);
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced) {
-    canvas.hidden = true;
-    stage.classList.add('login-logo-ready');
-  } else {
-    import('../login/corporate-3d.js').then(({ startCorporateLogo }) => {
-      if (!stage.isConnected) return;
-      startCorporateLogo(canvas);
-      window.setTimeout(() => { if (stage.isConnected) stage.classList.add('login-logo-ready'); }, 2900);
-    }).catch((error) => {
-      console.warn('3D preview unavailable; showing official logo:', error);
-      canvas.hidden = true;
-      stage.classList.add('login-logo-ready');
-    });
-  }
-  return stage;
+  return el('div', { class: 'login-logo-stage' }, logo);
 }
 
 export function renderLogin(root, { onSubmit }) {
