@@ -1,0 +1,8 @@
+# Never commit workbooks or exports: they contain personal data.
+*.xlsx
+*.xls
+*.csv
+*.env
+.env*
+.DS_Store
+node_modules/

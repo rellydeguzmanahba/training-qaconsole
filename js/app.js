@@ -1,3 +1,9 @@
+// Clickjacking defence: GitHub Pages cannot set frame-ancestors, so refuse to run inside another site's frame.
+if (window.top !== window.self) {
+  document.documentElement.textContent = '';
+  throw new Error('Framing is not allowed.');
+}
+
 // Tiny loader: reports startup failures (blocked CDN, syntax error) instead of an endless "Loading…".
 import('./main.js').catch((e) => {
   console.error(e);
