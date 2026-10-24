@@ -1,22 +1,22 @@
-/* Scoped login page: dashboard and authenticated app remain unchanged. */
+/* Login-only styling; no dashboard selectors are changed. */
 .auth-root:has(.login-shell){padding:0;display:block;background:#f8faf8}
 .login-shell{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(380px,.92fr)}
 .login-visual{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:54px 35px;background:radial-gradient(ellipse at 50% 40%,#fff 10%,#eef6f0 85%);overflow:hidden}
 .login-logo-stage{width:min(95%,750px);perspective:1100px;cursor:default;animation:login-rise .85s both}
-.login-logo-inner{transform-style:preserve-3d;will-change:transform;transition:filter .2s;animation:login-float 6s ease-in-out infinite}
-.login-logo{display:block;width:100%;height:auto;mix-blend-mode:multiply;user-select:none;filter:drop-shadow(0 22px 20px rgba(19,83,40,.09))}
-.login-visual-note{color:#577263;font-size:12px;letter-spacing:.1em;text-transform:uppercase;text-align:center;margin-top:24px}
+.login-logo-inner{transform-style:preserve-3d;will-change:transform;animation:login-float 6s ease-in-out infinite}
+.login-logo-svg{display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 18px 14px rgba(19,83,40,.12))}
+.login-a-left,.login-a-right,.login-arch,.login-arch-secondary,.login-arrow{stroke-dasharray:1100;stroke-dashoffset:1100;animation:login-draw 1.2s cubic-bezier(.22,.7,.2,1) forwards}
+.login-a-left{animation-delay:.25s}.login-a-right{animation-delay:.8s}.login-arch{animation-duration:1.7s;animation-delay:1.65s}.login-arch-secondary{animation-duration:1.4s;animation-delay:2.05s}.login-arrow{animation-duration:.75s;animation-delay:2.9s}
+.login-wordmark{fill:#6b6a0a;stroke:#fff;stroke-width:4px;paint-order:stroke;stroke-linejoin:round;font-family:Impact,'Arial Narrow',sans-serif;font-size:86px;font-weight:900;letter-spacing:-1px;opacity:0;animation:login-word-in .8s ease-out 3.25s forwards}
+.login-subtitle{fill:#0d2a15;font:700 35px system-ui,sans-serif;letter-spacing:8px;opacity:0;clip-path:inset(0 100% 0 0);animation:login-type 1.5s steps(13,end) 4.1s forwards}
+.login-visual-note{color:#577263;font-size:12px;letter-spacing:.1em;text-transform:uppercase;text-align:center;margin-top:12px}
 .login-panel{display:flex;align-items:center;justify-content:center;background:#fff;padding:52px clamp(28px,5vw,90px);border-left:1px solid #e6eee8}
-.login-panel-inner{width:100%;max-width:420px}
-.login-eyebrow{font-size:12px;letter-spacing:.17em;font-weight:750;color:#1e7a46;margin-bottom:18px}
-.login-heading{font-size:clamp(32px,3vw,44px);letter-spacing:-.04em;line-height:1.15;color:#1d2922}
-.login-description{color:#64756b;margin:12px 0 36px;font-size:15px}
-.login-form .field{margin-bottom:20px}
-.login-form label{font-weight:600;display:block;margin-bottom:7px;color:#2b3830}
-.login-form .input{width:100%;min-height:48px;border-radius:10px}
-.login-submit{width:100%;min-height:48px;border-radius:10px;margin-top:6px;font-weight:700}
-.login-help{font-size:12px;color:#829087;margin-top:28px;line-height:1.6}
-@keyframes login-float{0%,100%{translate:0 0}50%{translate:0 -12px}}
-@keyframes login-rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.login-panel-inner{width:100%;max-width:420px}.login-eyebrow{font-size:12px;letter-spacing:.17em;font-weight:750;color:#1e7a46;margin-bottom:18px}
+.login-heading{font-size:clamp(32px,3vw,44px);letter-spacing:-.04em;line-height:1.15;color:#1d2922}.login-description{color:#64756b;margin:12px 0 36px;font-size:15px}
+.login-form .field{margin-bottom:20px}.login-form label{font-weight:600;display:block;margin-bottom:7px;color:#2b3830}.login-form .input{width:100%;min-height:48px;border-radius:10px}
+.login-submit{width:100%;min-height:48px;border-radius:10px;margin-top:6px;font-weight:700}.login-help{font-size:12px;color:#829087;margin-top:28px;line-height:1.6}
+@keyframes login-draw{to{stroke-dashoffset:0}}@keyframes login-word-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes login-type{0%{opacity:1;clip-path:inset(0 100% 0 0)}100%{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes login-float{0%,100%{translate:0 0}50%{translate:0 -10px}}@keyframes login-rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:800px){.login-shell{grid-template-columns:1fr}.login-visual{min-height:0;padding:38px 20px 18px}.login-logo-stage{max-width:420px}.login-visual-note{font-size:10px;margin-top:10px}.login-panel{padding:34px 24px 60px;border-left:0}.login-description{margin-bottom:26px}}
-@media(prefers-reduced-motion:reduce){.login-logo-stage,.login-logo-inner{animation:none!important}.login-logo-inner{transform:none!important}}
+@media(prefers-reduced-motion:reduce){.login-logo-stage,.login-logo-inner,.login-a-left,.login-a-right,.login-arch,.login-arch-secondary,.login-arrow,.login-wordmark,.login-subtitle{animation:none!important}.login-logo-inner{transform:none!important}.login-a-left,.login-a-right,.login-arch,.login-arch-secondary,.login-arrow{stroke-dashoffset:0}.login-wordmark,.login-subtitle{opacity:1}.login-subtitle{clip-path:none}}
