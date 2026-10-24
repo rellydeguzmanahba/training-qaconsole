@@ -55,6 +55,7 @@ export function renderLogin(root, { onSubmit }) {
   const scene = logoScene();
   const visual = el('div', { class: 'login-visual' }, el('p', { class: 'login-visual-note' }, 'Training • Quality Assurance • Continuous Improvement'));
   const intro = el('div', { class: 'login-intro', role: 'presentation' }, scene);
+  // The intro is decorative: never delay access to the form beyond the short reveal.
   root.replaceChildren(el('section', { class: 'login-shell' },
     visual,
     el('div', { class: 'login-panel' },
@@ -76,7 +77,7 @@ export function renderLogin(root, { onSubmit }) {
     email.focus();
   };
   if (reduced) finish();
-  else window.setTimeout(finish, 5200);
+  else window.setTimeout(finish, 2900);
 }
 
 

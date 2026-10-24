@@ -18,7 +18,7 @@
 /* The corporate scene stays visible: no abrupt image swap. */
 .login-three-canvas{width:100%;height:clamp(300px,37vw,470px);display:block;background:transparent}
 .login-qa-subtitle{display:flex;justify-content:center;white-space:nowrap;color:#6b6a0a;font-weight:800;font-size:clamp(18px,2vw,27px);letter-spacing:.09em;margin-top:-12px}
-.login-qa-letter{display:inline-block;opacity:0;transform:translateY(9px);animation:ahba-letter .24s ease-out forwards;animation-delay:calc(3.8s + var(--letter)*.09s)}
+.login-qa-letter{display:inline-block;opacity:0;transform:translateY(9px);animation:ahba-letter .24s ease-out forwards;animation-delay:calc(1.85s + var(--letter)*.045s)}
 .login-logo-fallback-image{width:min(100%,700px);height:auto;object-fit:contain}
 @keyframes ahba-letter{to{opacity:1;transform:none}}
 @media(max-width:800px){.login-logo-stage{min-height:260px}.login-three-canvas{height:270px}.login-qa-subtitle{margin-top:-12px}}
@@ -38,3 +38,8 @@
 @keyframes ahba-form-reveal{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:800px){.login-intro .login-logo-stage{width:98vw;height:70svh}.login-intro .login-three-canvas{height:52svh}.login-visual .login-three-canvas{height:310px}.login-visual .login-logo-stage{width:100%}.login-visual{padding:18px 16px 6px}}
 @media(prefers-reduced-motion:reduce){.login-shell.login-ready .login-panel{animation:none}}
+
+/* Fast, visible intro: no static waiting screen. */
+.login-intro{animation:ahba-intro-in .24s ease-out both}
+@keyframes ahba-intro-in{from{opacity:.3}to{opacity:1}}
+.login-shell.login-ready .login-panel{animation-duration:.55s}
