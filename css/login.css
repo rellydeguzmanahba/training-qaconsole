@@ -22,3 +22,14 @@
 @keyframes login-float{0%,100%{translate:0 0}50%{translate:0 -10px}}@keyframes login-rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:800px){.login-shell{grid-template-columns:1fr}.login-visual{min-height:0;padding:38px 20px 18px}.login-logo-stage{max-width:420px}.login-visual-note{font-size:10px;margin-top:10px}.login-panel{padding:34px 24px 60px;border-left:0}.login-description{margin-bottom:26px}}
 @media(prefers-reduced-motion:reduce){.login-logo-stage,.login-logo-inner,.login-a-left,.login-a-right,.login-arch,.login-arch-secondary,.login-arrow,.login-wordmark,.login-subtitle{animation:none!important}.login-logo-inner{transform:none!important}.login-a-left,.login-a-right,.login-arch,.login-arch-secondary,.login-arrow{stroke-dashoffset:0}.login-wordmark,.login-subtitle{opacity:1}.login-subtitle{clip-path:none}}
+
+/* Fidelity fix: 3D intro resolves into the exact supplied transparent logo. */
+.login-logo-stage{position:relative;width:min(100%,730px);aspect-ratio:969/600;animation:none;isolation:isolate}
+.login-three-canvas{position:absolute;inset:0;width:100%;height:100%;transition:opacity .85s ease,transform .85s ease;opacity:1}
+.login-official-logo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transform:scale(.95) translateY(8px);transition:opacity 1s ease,transform 1.2s cubic-bezier(.2,.7,.2,1);filter:drop-shadow(0 14px 15px rgba(16,65,25,.12));user-select:none}
+.login-logo-ready .login-three-canvas{opacity:0;transform:scale(1.025);pointer-events:none}
+.login-logo-ready .login-official-logo{opacity:1;transform:none}
+.login-visual{gap:0;background:radial-gradient(ellipse at 50% 45%,#ffffff 4%,#eef6f0 90%)}
+.login-visual-note{margin-top:4px;letter-spacing:.075em;font-size:11px}
+@media(max-width:800px){.login-logo-stage{width:min(100%,460px)}.login-visual-note{margin-top:0}}
+@media(prefers-reduced-motion:reduce){.login-three-canvas{display:none!important}.login-official-logo{opacity:1!important;transform:none!important;transition:none!important}}

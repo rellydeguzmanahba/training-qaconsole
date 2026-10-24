@@ -5,19 +5,29 @@ const brand = () => el('span', { class: 'brand-mark', 'aria-hidden': 'true' }, '
 
 function logoScene() {
   const stage = el('div', { class: 'login-logo-stage' });
-  const canvas = el('canvas', { class: 'login-three-canvas', 'aria-label': 'Animated 3D AHBA Development logo', role: 'img' });
-  const subtitle = el('div', { class: 'login-qa-subtitle', 'aria-label': 'Training and QA' });
-  'TRAINING & QA'.split('').forEach((char, i) => {
-    const span = el('span', { class: 'login-qa-letter' }, char === ' ' ? '\u00a0' : char);
-    span.style.setProperty('--letter', i);
-    subtitle.append(span);
+  const canvas = el('canvas', { class: 'login-three-canvas', 'aria-hidden': 'true' });
+  // The supplied transparent image is the final visual authority: no retyped wordmark.
+  const official = el('img', {
+    src: 'assets/images/ahba-training-qa-official.png',
+    alt: 'AHBA Development — Training & QA',
+    class: 'login-official-logo', draggable: 'false'
   });
-  stage.append(canvas, subtitle);
-  import('../login/corporate-3d.js').then(({ startCorporateLogo }) => startCorporateLogo(canvas)).catch((error) => {
-    console.warn('3D logo unavailable:', error);
+  stage.append(canvas, official);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) {
     canvas.hidden = true;
-    stage.prepend(el('div', { class: 'login-logo-fallback' }, 'AHBA Development'));
-  });
+    stage.classList.add('login-logo-ready');
+  } else {
+    import('../login/corporate-3d.js').then(({ startCorporateLogo }) => {
+      if (!stage.isConnected) return;
+      startCorporateLogo(canvas);
+      window.setTimeout(() => { if (stage.isConnected) stage.classList.add('login-logo-ready'); }, 2900);
+    }).catch((error) => {
+      console.warn('3D preview unavailable; showing official logo:', error);
+      canvas.hidden = true;
+      stage.classList.add('login-logo-ready');
+    });
+  }
   return stage;
 }
 
