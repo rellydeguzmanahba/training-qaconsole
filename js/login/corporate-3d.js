@@ -213,8 +213,8 @@ export function startCorporateLogo(canvas) {
     pGeo.attributes.position.needsUpdate=true;
     // Responsive fit: account for aspect ratio, not just viewport width.
     const d = Math.max(14.0, 9.5 / Math.max(0.52, camera.aspect));
-    camera.position.set(0,1,d);
-    camera.lookAt(0,0,0);
+    camera.position.set(0, 1, window.innerWidth < 760 ? 38 : 31);
+    camera.lookAt(0, 0, 0);
     renderer.render(scene,camera);
     raf=requestAnimationFrame(frame);
   }
