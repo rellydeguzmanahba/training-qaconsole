@@ -1,4 +1,5 @@
 import { el } from '../utils/dom.js';
+import { errorState } from '../ui/states.js';
 import { dataTable } from '../ui/table.js';
 import { formModal } from '../ui/form.js';
 import { badge } from '../ui/badge.js';
@@ -46,7 +47,7 @@ export async function render(root, ctx) {
       content.replaceChildren(host);
     } catch (e) {
       console.error(e);
-      content.replaceChildren(el('div', { class: 'alert alert--error' }, friendlyError(e)));
+      content.replaceChildren(errorState(friendlyError(e), () => show(id)));
     }
   };
   for (const t of TABS) tabs.append(el('button', { class: 'tab', type: 'button', role: 'tab', dataset: { id: t.id }, onclick: () => show(t.id) }, t.label));
@@ -131,7 +132,7 @@ async function renderPenalty(host, ctx) {
 async function renderMonitoring(host, ctx) {
   const { data, error } = await ctx.sb.from('settings').select('*').eq('key', 'monitoring_days').maybeSingle();
   if (error) throw error;
-  if (!data) { host.replaceChildren(el('div', { class: 'alert alert--error' }, 'Setting "monitoring_days" is missing. Re-run 005_seed_lookups.sql.')); return; }
+  if (!data) { host.replaceChildren(el('div', { class: 'alert alert--error' }, 'Setting "monitoring_days" is missing. Run supabase/migrations/008_seed_fix_monitoring_training.sql.')); return; }
   const edit = async () => {
     const res = await formModal({ title: 'Monitoring period',
       fields: [{ name: 'days', label: 'Days', type: 'number', required: true, min: 1, max: 365, step: 1,

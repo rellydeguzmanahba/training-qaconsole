@@ -1,6 +1,7 @@
 import { ROUTES, DEFAULT_ROUTE } from './routes.js';
 import { el } from './utils/dom.js';
 import { setActive } from './ui/sidebar.js';
+import { emptyState, errorState, loadingState } from './ui/states.js';
 
 let token = 0;       // guards against stale async renders when the user navigates quickly
 let current = null;  // module currently shown (for destroy())
@@ -16,8 +17,7 @@ function parse() {
   return { path: seg[0] || DEFAULT_ROUTE, params: seg.slice(1) };
 }
 
-const notice = (title, text) =>
-  el('div', { class: 'card empty' }, el('h2', {}, title), el('p', { class: 'muted' }, text));
+const notice = (title, text) => el('div', { class: 'card' }, emptyState({ title, text }));
 
 async function go(ctx) {
   const my = ++token;
@@ -40,8 +40,7 @@ async function go(ctx) {
     return;
   }
 
-  view.replaceChildren(el('div', { class: 'card stack' },
-    el('div', { class: 'skeleton', style: 'width:40%' }), el('div', { class: 'skeleton' }), el('div', { class: 'skeleton', style: 'width:70%' })));
+  view.replaceChildren(loadingState());
 
   const section = el('section', { class: 'stack' });
   try {
@@ -58,9 +57,10 @@ async function go(ctx) {
     current = mod;
     view.replaceChildren(section);
     window.scrollTo(0, 0);
+    view.focus({ preventScroll: true });          // keyboard / screen-reader users land on the new page
   } catch (e) {
     console.error(e);
-    if (my === token) view.replaceChildren(notice('Something went wrong', 'This page could not be loaded. Try again or reload.'));
+    if (my === token) view.replaceChildren(errorState('This page could not be loaded.', () => go(ctx)));
   }
 }
 

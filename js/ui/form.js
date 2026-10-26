@@ -77,7 +77,8 @@ export function formModal({ title, fields, values = {}, submitText = 'Save', wid
     for (const f of fields) {
       const node = makeInput(f, values[f.name]);
       nodes[f.name] = node;
-      errEls[f.name] = el('div', { class: 'field__error', hidden: true });
+      errEls[f.name] = el('div', { class: 'field__error', id: `err_${f.name}`, hidden: true });
+      node.setAttribute?.('aria-describedby', `err_${f.name}`);
       stars[f.name] = el('span', { class: 'field__error', 'aria-hidden': 'true' }, ' *');
       const label = f.type === 'checkbox'
         ? el('label', { class: 'row', style: 'font-weight:400;gap:8px' }, node, f.label)
@@ -100,6 +101,7 @@ export function formModal({ title, fields, values = {}, submitText = 'Save', wid
       for (const f of fields) {
         wraps[f.name].hidden = !isVisible(f, v);
         stars[f.name].hidden = !isReq(f, v);
+        nodes[f.name].setAttribute?.('aria-required', String(isReq(f, v)));
       }
     };
 
@@ -108,6 +110,8 @@ export function formModal({ title, fields, values = {}, submitText = 'Save', wid
         const m = errors?.[f.name];
         errEls[f.name].textContent = m || '';
         errEls[f.name].hidden = !m;
+        const inp = nodes[f.name];
+        if (m) inp.setAttribute?.('aria-invalid', 'true'); else inp.removeAttribute?.('aria-invalid');
       }
       const first = fields.find((f) => errors?.[f.name]);
       if (first) (nodes[first.name].focus ? nodes[first.name] : nodes[first.name].querySelector('input'))?.focus();

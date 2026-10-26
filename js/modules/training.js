@@ -1,4 +1,5 @@
 import { el } from '../utils/dom.js';
+import { errorState } from '../ui/states.js';
 import { dataTable } from '../ui/table.js';
 import { badge } from '../ui/badge.js';
 import { fetchAll } from '../utils/db.js';
@@ -66,8 +67,9 @@ export async function render(root, ctx) {
     });
     return el('div', { class: 'stack' },
       el('div', { class: 'grid grid--cards' },
-        stat('Technicians in scope', elig.length), stat('Overall completion', `${pct}%`),
-        stat('Fully trained', full), stat('With missing training', elig.length - full)),
+        stat('Technicians in scope', elig.length), stat('Overall completion', req.length ? `${pct}%` : '—'),
+        stat('Fully trained', req.length ? full : '—'), stat('With missing training', req.length ? elig.length - full : '—')),
+      req.length ? null : el('div', { class: 'callout' }, 'No required training types are configured, so completion cannot be calculated. An admin can set them in Settings → Training types.'),
       el('div', { class: 'card card--flush' }, dataTable({ rows, pageSize: 50, empty: 'No training types configured.',
         columns: [{ key: 'name', label: 'Training' },
           { key: 'required', label: 'Type', render: (r) => badge(r.required ? 'Required' : 'Optional', r.required ? 'green' : '') },
@@ -94,7 +96,7 @@ export async function render(root, ctx) {
   function missing() {
     const rows = eligible().map((t) => ({ t, miss: missingFor(t) })).filter((r) => r.miss.length);
     return el('div', { class: 'card card--flush' }, dataTable({ rows, pageSize: 25, initialSort: { key: 'count', dir: 'desc' },
-      empty: 'No missing required training in this scope.',
+      empty: required().length ? 'No missing required training in this scope.' : 'No required training types are configured (Settings → Training types).',
       columns: [{ key: 'name', label: 'Technician', sort: (r) => nm(r.t), render: (r) => link(r.t) },
         { key: 'company', label: 'Company', sort: (r) => r.t.company?.name ?? '', render: (r) => r.t.company?.name },
         { key: 'designation', label: 'Designation', sort: (r) => r.t.designation?.name ?? '', render: (r) => r.t.designation?.name },
@@ -169,7 +171,7 @@ export async function render(root, ctx) {
 
   try { await load(); } catch (e) {
     console.error(e);
-    root.append(el('div', { class: 'alert alert--error' }, friendlyError(e)));
+    root.append(errorState(friendlyError(e), () => location.reload()));
     return;
   }
   const scopeSel = el('select', { class: 'input', 'aria-label': 'Scope' },
