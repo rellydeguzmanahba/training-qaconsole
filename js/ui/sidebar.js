@@ -1,11 +1,13 @@
 import { ROUTES } from '../routes.js';
 import { el } from '../utils/dom.js';
 import { icon } from './icons.js';
+import { ensureCss } from '../utils/styles.js';
 
 const KEY = 'ahba.sidebar.collapsed';
 const body = document.body;
 
 export function initSidebar(role) {
+  ensureCss('css/theme.css');            // Phase 3A design system (scoped to the signed-in app)
   const nav = document.getElementById('nav');
   nav.replaceChildren();
   let lastGroup = null;
