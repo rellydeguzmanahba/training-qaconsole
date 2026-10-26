@@ -1,0 +1,14 @@
+/* Employee Details module (loaded on demand by the module) */
+.emp-name{display:flex;align-items:center;gap:10px;min-width:0}
+.avatar{flex:none;width:34px;height:34px;border-radius:50%;background:var(--green-soft);color:var(--green-dark);display:grid;place-items:center;font-weight:700;font-size:.8rem}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{padding:1px 8px;border-radius:999px;font-size:.72rem;font-weight:600;border:1px solid var(--border);color:var(--muted);background:var(--surface)}
+.chip--on{background:var(--green-soft);border-color:#c9e5d4;color:var(--green-dark)}
+.profile-hero{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.profile-hero .avatar{width:56px;height:56px;font-size:1.2rem}
+.notice{padding:10px 14px;border-radius:var(--radius-sm);background:var(--amber-soft);color:var(--amber);font-size:.9rem}
+.diff-old{color:var(--muted);text-decoration:line-through}
+.diff-new{font-weight:600}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.step{padding:2px 12px;border-radius:999px;font-size:.8rem;border:1px solid var(--border);color:var(--muted)}
+.step--on{background:var(--green);border-color:var(--green);color:#fff}
