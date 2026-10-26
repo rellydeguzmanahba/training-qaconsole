@@ -1,0 +1,80 @@
+/* AHBA design system (Phase 3A). Scoped to the signed-in app (#app), dialogs and toasts,
+   so the finalized login page is never affected. Loaded by js/ui/sidebar.js after sign-in. */
+#app, dialog.modal, .toasts {
+  --bg: #f5f4ef; --surface: #ffffff; --border: #e4e2da; --border-strong: #cfccc0;
+  --text: #1d2926; --muted: #66716c;
+  --green: #0f7a52; --green-dark: #0a5c3e; --green-soft: #e4f2ea;
+  --gold: #b8963e; --gold-soft: #f6efdc; --gold-dark: #8a6d22;
+  --radius: 16px; --radius-sm: 10px;
+  --shadow: 0 1px 2px rgba(20, 40, 32, .04), 0 8px 24px rgba(20, 40, 32, .06);
+  --glass: rgba(255, 255, 255, .72); --glass-border: rgba(255, 255, 255, .85);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+#app {
+  background:
+    radial-gradient(1100px 480px at 88% -8%, rgba(15, 122, 82, .10), transparent 62%),
+    radial-gradient(900px 520px at -8% 108%, rgba(184, 150, 62, .10), transparent 58%),
+    var(--bg);
+  color: var(--text);
+  letter-spacing: .005em;
+}
+#app h1, #app h2, #app h3 { letter-spacing: -.01em; }
+#app .stat { font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+
+/* ---- glass surfaces ---- */
+#app .card {
+  background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius);
+  box-shadow: var(--shadow); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
+  transition: box-shadow .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
+}
+#app .card--flush { overflow: hidden; }
+#app .stat-link:hover .card { border-color: rgba(15, 122, 82, .45); box-shadow: 0 2px 4px rgba(20, 40, 32, .05), 0 14px 32px rgba(15, 122, 82, .12); transform: translateY(-2px); }
+#app .card__title { color: var(--gold-dark); letter-spacing: .08em; }
+#app .section-title { background: rgba(255, 255, 255, .5); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #app .card { background: #fff; } }
+
+/* ---- shell: sidebar + topbar ---- */
+#app .sidebar { background: rgba(255, 255, 255, .78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-right: 1px solid var(--border); }
+#app .brand-mark { background: linear-gradient(145deg, var(--green), var(--green-dark)); box-shadow: inset 0 -3px 0 var(--gold); }
+#app .brand-text small { color: var(--gold-dark); letter-spacing: .06em; text-transform: uppercase; font-size: .66rem; }
+#app .nav__item { border-radius: 12px; transition: background .15s var(--ease), color .15s var(--ease); position: relative; }
+#app .nav__item:hover { background: rgba(15, 122, 82, .07); }
+#app .nav__item[aria-current="page"] { background: var(--green-soft); color: var(--green-dark); }
+#app .nav__item[aria-current="page"]::before { content: ""; position: absolute; left: -8px; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--gold); }
+#app .nav__group { color: var(--gold-dark); }
+#app .topbar { background: rgba(245, 244, 239, .72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+#app .topbar__title { font-size: 1.1rem; }
+#app .user-name { color: var(--text); }
+#app .view { animation: view-in .28s var(--ease); }
+@keyframes view-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---- controls ---- */
+#app .btn, dialog.modal .btn { border-radius: 12px; transition: background .15s var(--ease), box-shadow .15s var(--ease), transform .1s var(--ease); }
+#app .btn:active, dialog.modal .btn:active { transform: translateY(1px); }
+#app .btn--primary, dialog.modal .btn--primary { background: var(--green); border-color: var(--green); box-shadow: 0 4px 12px rgba(15, 122, 82, .22); }
+#app .btn--primary:hover, dialog.modal .btn--primary:hover { background: var(--green-dark); }
+#app .input, dialog.modal .input { border-radius: 12px; background: rgba(255, 255, 255, .9); transition: border-color .15s, box-shadow .15s; }
+#app .input:focus, dialog.modal .input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(15, 122, 82, .15); outline: none; }
+#app :focus-visible, dialog.modal :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+#app .badge--amber, #app .badge--blue { }
+#app .tab[aria-selected="true"] { border-color: var(--gold); color: var(--green-dark); }
+#app .table th { background: rgba(250, 249, 245, .9); color: var(--gold-dark); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+#app .table tbody tr { transition: background .12s; }
+#app .table tbody tr:hover { background: rgba(15, 122, 82, .045); }
+#app .bar > span { background: linear-gradient(90deg, var(--green), #2da36f); }
+#app .alert--info, #app .notice { border-radius: 12px; }
+#app .skeleton { border-radius: 8px; }
+
+/* ---- dialogs and toasts ---- */
+dialog.modal { border-radius: 20px; background: #fff; box-shadow: 0 24px 60px rgba(10, 30, 22, .28); animation: dlg-in .2s var(--ease); }
+dialog.modal::backdrop { background: rgba(14, 28, 22, .5); backdrop-filter: blur(3px); }
+@keyframes dlg-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.toasts .toast { border-radius: 14px; background: #1d2926; }
+.toasts .toast--success { background: var(--green-dark); }
+.toasts .toast--error { background: #a6261e; }
+
+/* ---- low-end devices: drop blur, keep the look ---- */
+@media (max-width: 700px) {
+  #app .card, #app .sidebar, #app .topbar { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  #app .card { background: #fff; }
+}
