@@ -1,0 +1,56 @@
+/* Admin dashboard (Phase 3A). Loaded by js/modules/dashboard.js */
+.dash { display: flex; flex-direction: column; gap: 28px; }
+.dash-section > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.dash-section > header h3 { font-size: 1.05rem; }
+.dash-section > header p { color: var(--muted); font-size: .85rem; }
+.eyebrow { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-dark); font-weight: 650; }
+
+/* hero */
+.hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: center; gap: 8px; overflow: hidden; padding: 0; min-height: 300px; }
+.hero__copy { padding: 32px 8px 32px 32px; display: flex; flex-direction: column; gap: 10px; z-index: 1; }
+.hero__copy h2 { font-size: clamp(1.5rem, 2.6vw, 2.1rem); line-height: 1.15; }
+.hero__copy .muted { max-width: 46ch; }
+.hero__chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.hero__chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .8); border: 1px solid var(--border); font-size: .82rem; color: var(--muted); }
+.hero__chip b { color: var(--text); font-size: 1rem; font-variant-numeric: tabular-nums; }
+.hero__actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.hero__stage { position: relative; height: 100%; min-height: 300px; touch-action: pan-y; }
+.hero__stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero-fallback { position: absolute; inset: 0; display: grid; place-items: center; }
+.hero-fallback img { width: min(78%, 340px); height: auto; border-radius: 16px; background: #fff; box-shadow: var(--shadow); padding: 8px; }
+.hero-fallback .ring { position: absolute; border: 1px solid rgba(15, 122, 82, .25); border-radius: 50%; animation: ring-spin 28s linear infinite; }
+.hero-fallback .ring:nth-child(1) { width: 62%; aspect-ratio: 1; border-color: rgba(184, 150, 62, .35); }
+.hero-fallback .ring:nth-child(2) { width: 82%; aspect-ratio: 1; animation-duration: 40s; animation-direction: reverse; }
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+
+/* KPI grid */
+.kpis { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.kpi { position: relative; display: block; height: 100%; }
+.kpi .card { height: 100%; padding: 16px 18px; }
+.kpi .card::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px; border-radius: 3px; background: var(--green); opacity: .85; }
+.kpi--gold .card::before { background: var(--gold); }
+.kpi--red .card::before { background: #c0392b; }
+.kpi--muted .card::before { background: var(--border-strong); }
+.kpi .stat { font-size: 1.75rem; }
+
+/* panels + charts */
+.panels { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.gauge { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 18px; }
+.gauge svg { display: block; }
+.gauge__value { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-direction: column; gap: 4px; font-size: .88rem; color: var(--muted); }
+.legend b { color: var(--text); font-variant-numeric: tabular-nums; }
+.hbars { display: flex; flex-direction: column; gap: 2px; }
+.stack-note { font-size: .82rem; color: var(--muted); margin-top: 10px; }
+.callout { display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--gold-soft); color: #6d5416; font-size: .88rem; }
+.callout--info { background: var(--green-soft); color: var(--green-dark); }
+details.explain { margin-top: 12px; font-size: .86rem; color: var(--muted); }
+details.explain summary { cursor: pointer; color: var(--green-dark); font-weight: 600; }
+details.explain code { background: rgba(0, 0, 0, .05); padding: 1px 5px; border-radius: 4px; font-size: .82rem; }
+.feed li { align-items: flex-start; }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; min-height: 0; }
+  .hero__copy { padding: 24px 20px 8px; }
+  .hero__stage { min-height: 200px; height: 220px; }
+}
