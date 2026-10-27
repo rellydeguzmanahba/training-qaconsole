@@ -5,6 +5,7 @@ import { updateVersioned } from '../utils/db.js';
 import { UserError } from '../utils/errors.js';
 import { nameKey } from '../utils/validate.js';
 import { todayISO } from '../utils/dates.js';
+import { lmsColumnAvailable, employeeNoAvailable } from '../utils/schema.js';
 
 export const STATUSES = ['Applicant', 'Probationary', 'Regular', 'Resigned', 'Terminated'];
 const SEPARATED = ['Resigned', 'Terminated'];
@@ -20,6 +21,9 @@ export async function openTechnicianForm(ctx, existing = null) {
   // Show active items, plus the record's current one even if it was deactivated.
   const keep = (rows, id) => rows.data.filter((x) => x.active || x.id === id);
   const today = todayISO();
+  const lms = await lmsColumnAvailable(ctx.sb);
+  const hasNo = await employeeNoAvailable(ctx.sb);
+  const isAdmin = ctx.role === 'admin';
 
   const values = existing ? { ...existing, access: (existing.access || []).map(String) } : { employment_status: 'Probationary', access: [] };
 
@@ -35,11 +39,15 @@ export async function openTechnicianForm(ctx, existing = null) {
       { name: 'designation_id', label: 'Designation', type: 'select', required: true, options: opt(keep(de, existing?.designation_id)) },
       { name: 'mobile', label: 'Mobile', type: 'tel', maxlength: 20 },
       { name: 'email', label: 'Email', type: 'email', maxlength: 254 },
-      { name: 'employment_status', label: 'Employment status', type: 'select', required: true, options: STATUSES.map((s) => ({ value: s, label: s })) },
+      { name: 'employment_status', label: 'Employment status', type: 'select', required: true, options: STATUSES.filter((s) => isAdmin || !SEPARATED.includes(s) || s === existing?.employment_status).map((s) => ({ value: s, label: s })),
+        disabled: !isAdmin && SEPARATED.includes(existing?.employment_status),
+        hint: isAdmin ? null : 'Only an admin can deactivate or reactivate an employee.' },
       { name: 'date_hired', label: 'Date hired', type: 'date', max: today },
       { name: 'date_separated', label: 'Date separated', type: 'date', max: today,
         visible: (v) => SEPARATED.includes(v.employment_status), required: (v) => SEPARATED.includes(v.employment_status) },
       { name: 'separation_reason', label: 'Separation reason', type: 'text', maxlength: 300, visible: (v) => SEPARATED.includes(v.employment_status) },
+      ...(hasNo ? [{ name: 'employee_no', label: 'Employee number (shown on the ID)', type: 'text', maxlength: 40 }] : []),
+      ...(lms ? [{ name: 'has_lms_account', label: 'LMS user (has an LMS account)', type: 'checkbox' }] : []),
       { name: 'lms_user', label: 'LMS username', type: 'text', maxlength: 120 },
       { name: 'lms_login', label: 'LMS login', type: 'text', maxlength: 120 },
       { name: 'access', label: 'Account access', type: 'checks', options: opt(keep(ac, null)) },
@@ -61,6 +69,8 @@ export async function openTechnicianForm(ctx, existing = null) {
         employment_status: v.employment_status, date_separated: v.date_separated, separation_reason: v.separation_reason,
         lms_user: v.lms_user, lms_login: v.lms_login,
       };
+      if (lms) payload.has_lms_account = !!v.has_lms_account;
+      if (hasNo) payload.employee_no = v.employee_no;
 
       // 1) hard duplicate: same first name + surname
       const key = nameKey(v.first_name, v.surname);
@@ -94,6 +104,7 @@ export async function openTechnicianForm(ctx, existing = null) {
           rec = data;
         }
       } catch (err) {
+        if (err.code === '23505' && /employee_no/.test(err.message || '')) throw new UserError('This employee number is already assigned.', { employee_no: 'Already assigned to another employee.' });
         if (err.code === '23505') throw new UserError('A technician with this first name and surname already exists.', { first_name: 'Duplicate technician name.' });
         throw err;
       }

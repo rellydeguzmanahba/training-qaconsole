@@ -11,6 +11,8 @@ let escBound = false;
 export function initSidebar(role) {
   ensureCss('css/theme.css');            // design system (scoped to the signed-in app)
   installTabKeys();
+  document.body.classList.toggle('role-technician', role === 'technician');
+  if (role === 'technician') ensureCss('css/portal.css');
   const app = document.getElementById('app');
   const nav = document.getElementById('nav');
   nav.replaceChildren();

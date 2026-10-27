@@ -1,4 +1,5 @@
 import { el } from '../utils/dom.js';
+import { errorState } from '../ui/states.js';
 import { dataTable } from '../ui/table.js';
 import { badge, EMPLOYMENT_VARIANT, SEVERITY_VARIANT, VIOLATION_STATUS_VARIANT, RESULT_VARIANT,
   MONITORING_VARIANT, deploymentVariant } from '../ui/badge.js';
@@ -7,6 +8,9 @@ import { fmtDate, fmtDateTime } from '../utils/dates.js';
 import { ordinal } from '../utils/validate.js';
 import { openTechnicianForm } from './technician-form.js';
 import { openTrainingForm, trainingToast } from './training-form.js';
+import { openDeactivate, openReactivate } from './employee-actions.js';
+import { canSeeContact, maskPhone, maskEmail } from '../utils/privacy.js';
+import { ensureCss } from '../utils/styles.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const section = (title, body, extra = null) =>
@@ -19,7 +23,7 @@ export async function renderDetail(root, ctx, id) {
 
   let d;
   try {
-    const [t, types, recs, viol, ret, off, hist, prof] = await Promise.all([
+    const [t, types, recs, viol, ret, off, hist, prof, acc] = await Promise.all([
       sb.from('technicians').select('*,company:companies(name),designation:designations(name),technician_access(access_id,access_systems(name))').eq('id', id).maybeSingle(),
       sb.from('training_types').select('id,name,required,sort_order').eq('active', true).order('sort_order'),
       sb.from('training_records').select('id,completed_on,trainer,remarks,training_type_id,training_types(name)').eq('technician_id', id).order('completed_on', { ascending: false }),
@@ -28,9 +32,10 @@ export async function renderDetail(root, ctx, id) {
       sb.from('v_offense_status').select('*').eq('technician_id', id).maybeSingle(),
       sb.from('v_offense_history').select('*').eq('technician_id', id).order('offense_date', { ascending: false }),
       sb.from('profiles').select('user_id,full_name'),
+      sb.from('access_systems').select('id,name,active').order('name'),
     ]);
-    for (const r of [t, types, recs, viol, ret, off, hist, prof]) if (r.error) throw r.error;
-    d = { t: t.data, types: types.data, recs: recs.data, viol: viol.data, ret: ret.data, off: off.data, hist: hist.data, people: new Map(prof.data.map((p) => [p.user_id, p.full_name])) };
+    for (const r of [t, types, recs, viol, ret, off, hist, prof, acc]) if (r.error) throw r.error;
+    d = { t: t.data, types: types.data, recs: recs.data, viol: viol.data, ret: ret.data, off: off.data, hist: hist.data, people: new Map(prof.data.map((p) => [p.user_id, p.full_name])), acc: acc.data };
     if (ctx.can('audit:view')) {
       const a = await sb.from('audit_log').select('id,at,table_name,action,old_data,new_data,actor').eq('technician_id', id).order('at', { ascending: false }).limit(100);
       if (a.error) throw a.error;
@@ -38,7 +43,7 @@ export async function renderDetail(root, ctx, id) {
     }
   } catch (e) {
     console.error(e);
-    root.append(el('div', { class: 'alert alert--error' }, friendlyError(e)));
+    root.append(errorState(friendlyError(e), () => location.reload()));
     return;
   }
   if (!d.t) { root.append(el('div', { class: 'card empty' }, el('h2', {}, 'Technician not found'), el('a', { href: '#/technicians' }, 'Back to technicians'))); return; }
@@ -57,16 +62,41 @@ export async function renderDetail(root, ctx, id) {
   const dl = (pairs) => el('dl', { class: 'dl' }, pairs.map(([k, v]) => el('div', {}, el('dt', {}, k), el('dd', {}, v ?? '—'))));
 
   // ---- profile
-  const access = t.technician_access.map((a) => a.access_systems?.name).filter(Boolean).join(', ');
-  const profile = section('Profile', pad(dl([
-    ['Company', t.company?.name], ['Designation', t.designation?.name],
-    ['Employment status', badge(t.employment_status, EMPLOYMENT_VARIANT[t.employment_status])],
-    ['Date hired', fmtDate(t.date_hired)], ['Birthdate', fmtDate(t.birthdate)],
-    ['Mobile', t.mobile], ['Email', t.email],
-    ...(t.date_separated || ['Resigned', 'Terminated'].includes(t.employment_status)
-      ? [['Date separated', fmtDate(t.date_separated)], ['Separation reason', t.separation_reason]] : []),
-    ['LMS username', t.lms_user], ['LMS login', t.lms_login], ['Account access', access || 'None'],
-  ])), ctx.can('technicians:write') ? el('button', { class: 'btn btn--sm', type: 'button', onclick: edit }, 'Edit') : null);
+  // ---- profile sections: employment, contact, system access
+  ensureCss('css/employees.css');
+  const sees = canSeeContact(ctx.role);
+  const separated = ['Resigned', 'Terminated'].includes(t.employment_status);
+  const yn = (on) => badge(on ? 'Yes' : 'No', on ? 'green' : '');
+  const editBtn = ctx.can('technicians:write') ? el('button', { class: 'btn btn--sm', type: 'button', onclick: edit }, 'Edit') : null;
+  const have = new Set(t.technician_access.map((a) => a.access_id));
+  const ORDER = ['salesforce', 'wfm', 'jo mobile', 'account lookup'];
+  const rank = (n) => { const i = ORDER.findIndex((k) => n.toLowerCase().includes(k)); return i < 0 ? 99 : i; };
+  const systems = d.acc.filter((a) => a.active || have.has(a.id)).sort((x, y) => rank(x.name) - rank(y.name) || x.name.localeCompare(y.name));
+  const hidden = (v) => (v ? v : 'Restricted');
+  const lmsName = ['yes', 'no', 'y', 'n'].includes(String(t.lms_user ?? '').trim().toLowerCase()) ? null : t.lms_user;
+
+  const employment = section('Employment information', pad(dl([
+    ...(t.employee_no !== undefined ? [['Employee no.', t.employee_no]] : []),
+    ['Designation', t.designation?.name], ['Company', t.company?.name],
+    ['Employment status', badge(t.employment_status, EMPLOYMENT_VARIANT[t.employment_status])], ['Date hired', fmtDate(t.date_hired)],
+    ...(separated || t.date_separated ? [['Date separated', fmtDate(t.date_separated)], ['Separation reason', t.separation_reason]] : []),
+  ])), editBtn);
+  const contact = section('Contact details', pad(el('div', { class: 'stack' }, dl([
+    ['Mobile', t.mobile ? (sees ? t.mobile : maskPhone(t.mobile)) : null], ['Email', t.email ? (sees ? t.email : maskEmail(t.email)) : null],
+    ['Birthdate', sees ? fmtDate(t.birthdate) : hidden(null)],
+  ]), sees ? null : el('p', { class: 'muted small' }, 'Some contact details are hidden for your role.'))), editBtn);
+  const access = section('System access', pad(dl([
+    ...(t.has_lms_account !== undefined ? [['LMS User', yn(t.has_lms_account)]] : []),
+    ...systems.map((a) => [a.name, yn(have.has(a.id))]),
+    ['LMS username', lmsName], ['LMS login', t.lms_login],
+  ])), editBtn);
+  const profile = el('div', { class: 'stack' }, el('div', { class: 'grid grid--2' }, employment, contact), access);
+
+  const statusAction = async (fn, ok) => { try { if (await fn(ctx, t)) { ctx.toast(ok, 'success'); await reload(); } } catch (e) { ctx.toast(friendlyError(e), 'error'); } };
+  const lifecycle = ctx.role === 'admin'
+    ? el('button', { class: 'btn btn--sm', type: 'button',
+      onclick: () => (separated ? statusAction(openReactivate, 'Employee reactivated.') : statusAction(openDeactivate, 'Employee deactivated.')) },
+    separated ? 'Reactivate' : 'Deactivate') : null;
 
   // ---- offense / deployment
   const o = d.off;
@@ -146,9 +176,12 @@ export async function renderDetail(root, ctx, id) {
   })) : null;
 
   root.append(
-    el('div', {}, el('a', { class: 'back-link', href: '#/technicians' }, '← Technicians'),
-      el('div', { class: 'page-head' }, el('div', {}, el('h2', {}, name),
-        el('div', { class: 'row', style: 'margin-top:6px' }, badge(t.employment_status, EMPLOYMENT_VARIANT[t.employment_status]),
-          t.company?.name ? el('span', { class: 'muted' }, t.company.name) : null)))),
+    el('div', {}, el('a', { class: 'back-link', href: '#/technicians' }, '← Employee Directory'),
+      el('div', { class: 'page-head' }, el('div', { class: 'profile-hero' },
+        el('span', { class: 'avatar', 'aria-hidden': 'true' }, `${t.first_name[0] ?? ''}${t.surname[0] ?? ''}`.toUpperCase()),
+        el('div', {}, el('h2', {}, name),
+          el('div', { class: 'row', style: 'margin-top:6px' }, badge(t.employment_status, EMPLOYMENT_VARIANT[t.employment_status]),
+            t.designation?.name ? el('span', { class: 'muted' }, t.designation.name) : null,
+            t.company?.name ? el('span', { class: 'muted' }, t.company.name) : null))), lifecycle)),
     profile, offense, el('div', { class: 'grid grid--2' }, training, trainingHistory), violations, retraining, offenseHistory, audit);
 }

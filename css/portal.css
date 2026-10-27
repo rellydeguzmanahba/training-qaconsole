@@ -1,0 +1,66 @@
+/* Technician portal (Phase 3D). Mobile first. Loaded for technician accounts only. */
+body.role-technician #app .sidebar, body.role-technician #app .scrim, body.role-technician #app #menu-btn { display: none !important; }
+body.role-technician #app .view { padding-bottom: 96px; max-width: 1100px; }
+.portal-nav { display: none; }
+body.role-technician .portal-nav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: rgba(255, 255, 255, .92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content: space-around; gap: 4px; }
+.portal-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: .68rem; text-align: center; line-height: 1.15; }
+.portal-nav a[aria-current="page"] { color: var(--green-dark); background: var(--green-soft); font-weight: 650; }
+.portal-nav a:focus-visible { outline: 2px solid var(--green); }
+.portal-welcome { margin-bottom: 16px; }
+.portal-welcome h2 { font-size: 1.5rem; }
+.portal-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+.portal-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.portal-card__title { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--gold-dark); margin-bottom: 10px; }
+.portal-id { display: flex; flex-direction: column; align-items: center; padding: 12px 8px 14px; overflow: hidden; }
+.portal-id__host { width: 100%; min-height: 470px; display: grid; place-items: start center; }
+.portal-id__hint { margin-top: 4px; }
+.portal-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--green); color: #fff; font-size: .72rem; margin-left: 4px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; margin-top: 6px; background: var(--border-strong); }
+.dot--good { background: var(--green); } .dot--warn { background: var(--gold); } .dot--bad { background: #c0392b; } .dot--info { background: #1d5fa8; }
+.list li > a { display: flex; gap: 10px; text-decoration: none; color: inherit; flex: 1; min-width: 0; }
+.list li.is-read { opacity: .65; }
+@media (min-width: 900px) { .portal-grid { grid-template-columns: minmax(300px, 380px) 1fr; align-items: start; } body.role-technician .portal-nav { max-width: 520px; margin: 0 auto; border: 1px solid var(--border); border-bottom: 0; border-radius: 16px 16px 0 0; } }
+
+/* ---- employee ID card ---- */
+.idc { --gx: 50%; --gy: 40%; position: relative; width: 260px; perspective: 900px; perspective-origin: 50% 20%; user-select: none; -webkit-user-select: none; }
+.idc__drop { transform-origin: 50% 0; animation: idc-drop 1.05s cubic-bezier(.2, .9, .25, 1.1) both; }
+@keyframes idc-drop { from { transform: translateY(-115%); opacity: 0; } 60% { opacity: 1; } to { transform: none; opacity: 1; } }
+.idc__swing { position: relative; transform-origin: 50% 0; will-change: transform; transform-style: preserve-3d; }
+.idc__lanyard { display: block; width: 100%; height: 170px; margin-bottom: -22px; }
+.idc__clip { position: absolute; left: 50%; top: 134px; width: 28px; height: 44px; margin-left: -14px; border-radius: 8px 8px 12px 12px; z-index: 3;
+  background: linear-gradient(90deg, #aeb4b0, #f2f4f2 45%, #8e9692); box-shadow: 0 2px 4px rgba(0, 0, 0, .25); }
+.idc__clip::after { content: ""; position: absolute; left: 50%; bottom: 7px; width: 14px; height: 6px; margin-left: -7px; border-radius: 4px; background: rgba(0, 0, 0, .35); }
+.idc__pivot { position: relative; transform-origin: 50% 0; transform-style: preserve-3d; margin-top: 0; z-index: 2; }
+.idc__card { position: relative; width: 260px; height: 410px; transform-style: preserve-3d; cursor: pointer; outline: none; will-change: transform; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+.idc__card:focus-visible .idc__front, .idc__card:focus-visible .idc__back { box-shadow: 0 0 0 3px var(--green), 0 14px 34px rgba(10, 30, 22, .28); }
+.idc__face { position: absolute; inset: 0; border-radius: 18px; background: #fff; border: 1px solid #e3e1d8; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  box-shadow: 0 14px 34px rgba(10, 30, 22, .24), 0 2px 6px rgba(10, 30, 22, .1); overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 34px 16px 0; text-align: center; }
+.idc__back { transform: rotateY(180deg); padding: 0 0 12px; align-items: stretch; }
+.idc__slot { position: absolute; top: 12px; left: 50%; width: 46px; height: 9px; margin-left: -23px; border-radius: 6px; background: #e4e2da; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .25); }
+.idc__logo { width: 190px; height: auto; margin: 4px 0 2px; pointer-events: none; }
+.idc__wordmark { font-weight: 700; color: var(--green-dark); margin: 16px 0 10px; font-size: .95rem; }
+.idc__label { font-size: .62rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gold-dark); margin: 6px 0 12px; font-weight: 700; }
+.idc__avatar { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; font-size: 1.9rem; font-weight: 700; color: #fff;
+  background: linear-gradient(145deg, #0f7a52, #0a5c3e); box-shadow: 0 0 0 4px #fff, 0 0 0 5px var(--gold); }
+.idc__name { margin-top: 14px; font-size: 1.12rem; line-height: 1.2; color: var(--text); }
+.idc__role { margin-top: 4px; font-weight: 600; color: var(--green-dark); font-size: .9rem; }
+.idc__company { color: var(--muted); font-size: .84rem; margin-top: 2px; }
+.idc__band { margin-top: auto; align-self: stretch; margin-left: -16px; margin-right: -16px; padding: 12px 16px; background: var(--green-dark); color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .8rem; border-top: 3px solid var(--gold); }
+.idc__status { background: rgba(255, 255, 255, .16); padding: 2px 10px; border-radius: 999px; font-weight: 600; }
+.idc__stripe { height: 52px; background: #1d2926; margin-top: 30px; }
+.idc__rows { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.idc__row { display: flex; flex-direction: column; font-size: .74rem; color: var(--muted); border-bottom: 1px solid #eeece4; padding-bottom: 6px; }
+.idc__row strong { color: var(--text); font-size: .9rem; font-weight: 600; }
+.idc__foot { margin-top: auto; text-align: center; font-size: .7rem; color: var(--gold-dark); letter-spacing: .06em; padding-top: 6px; }
+.idc__glare { position: absolute; inset: 0; pointer-events: none; opacity: .5; background: radial-gradient(circle at var(--gx) var(--gy), rgba(255, 255, 255, .55), transparent 55%); mix-blend-mode: soft-light; }
+.idc.is-lite .idc__glare { display: none; }
+.idc.is-lite .idc__face { box-shadow: 0 6px 14px rgba(10, 30, 22, .2); }
+
+/* reduced motion: static card; flipping swaps faces */
+.idc.is-static .idc__card { transform: none !important; }
+.idc.is-static .idc__back { transform: none; display: none; }
+.idc.is-static.is-flipped .idc__front { display: none; }
+.idc.is-static.is-flipped .idc__back { display: flex; }
+.idc.is-static .idc__glare { display: none; }
+@media (max-width: 360px) { .idc, .idc__card { width: 232px; } .idc__card { height: 372px; } .idc__logo { width: 168px; } }

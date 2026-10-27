@@ -23,7 +23,9 @@ async function go(ctx) {
   const my = ++token;
   const view = document.getElementById('view');
   const { path, params } = parse();
-  const route = ROUTES.find((r) => r.path === path);
+  const route = ctx.role === 'technician'
+    ? { path, title: 'My Portal', module: 'portal', roles: ['technician'], phase: 3 }    // technicians only ever see the portal
+    : ROUTES.find((r) => r.path === path);
 
   if (current?.destroy) { try { current.destroy(); } catch (e) { console.error(e); } }
   current = null;
@@ -35,11 +37,6 @@ async function go(ctx) {
   }
   setTitle(route.title); setActive(route.path);
 
-  if (ctx.role === 'technician') {      // portal arrives in a later phase; never show staff pages
-    setTitle('Technician portal'); setActive('');
-    view.replaceChildren(notice('Technician portal', 'Your account is linked. Your personal dashboard is being prepared.'));
-    return;
-  }
 
   if (!route.roles.includes(ctx.role)) {
     view.replaceChildren(notice('Access restricted', 'Your role does not have access to this page.'));

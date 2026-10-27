@@ -1,14 +1,10 @@
 // Interactive 3D hero for the admin dashboard. Three.js is loaded on demand (pinned version, jsDelivr).
 // Modes: full (desktop WebGL) | lite (touch/tablet: slower, no pointer tracking) | fallback (CSS only: phones, low-end, reduced motion, no WebGL).
 import { el } from '../utils/dom.js';
+import { getLogo, keyedLogoCanvas } from './brand.js';
 
 const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-// The official logo is never redrawn. Change this list if the file in assets/images/ has another name.
-export const LOGO_CANDIDATES = ['assets/images/ahba-logo.png', 'assets/images/ahba-training-qa-logo.png', 'assets/images/logo.png'];
 
-let logoPromise;
-const loadImage = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
-const getLogo = () => (logoPromise ??= (async () => { for (const p of LOGO_CANDIDATES) { const i = await loadImage(p); if (i) return i; } return null; })());
 
 function pickMode() {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -18,21 +14,6 @@ function pickMode() {
 }
 
 // Render-time keying only: near-white background becomes transparent. The asset file itself is unchanged.
-function keyedLogoCanvas(img) {
-  const s = Math.min(1, 1024 / img.naturalWidth);
-  const c = document.createElement('canvas');
-  c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
-  const x = c.getContext('2d', { willReadFrequently: true });
-  x.drawImage(img, 0, 0, c.width, c.height);
-  const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
-  for (let i = 0; i < p.length; i += 4) {
-    const m = Math.min(p[i], p[i + 1], p[i + 2]);
-    p[i + 3] = Math.round(p[i + 3] * Math.max(0, Math.min(1, (248 - m) / 33)));
-  }
-  x.putImageData(d, 0, 0);
-  return c;
-}
-
 function glowCanvas() {
   const c = document.createElement('canvas'); c.width = c.height = 256;
   const x = c.getContext('2d'), g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
