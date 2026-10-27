@@ -30,7 +30,7 @@ const LOOKUPS = {
 };
 
 const TABS = [...Object.entries(LOOKUPS).map(([k, v]) => ({ id: k, label: v.label })),
-  { id: 'penalty', label: 'Penalty rules' }, { id: 'monitoring', label: 'Monitoring period' }, { id: 'users', label: 'Users' }];
+  { id: 'penalty', label: 'Penalty rules' }, { id: 'monitoring', label: 'Monitoring period' }, { id: 'users', label: 'Users' }, { id: 'tech-accounts', label: 'Technician accounts' }];
 
 export async function render(root, ctx) {
   const content = el('div');
@@ -43,6 +43,7 @@ export async function render(root, ctx) {
       if (LOOKUPS[id]) await renderLookup(host, ctx, LOOKUPS[id]);
       else if (id === 'penalty') await renderPenalty(host, ctx);
       else if (id === 'monitoring') await renderMonitoring(host, ctx);
+      else if (id === 'tech-accounts') await (await import('./technician-accounts.js')).renderAccounts(host, ctx);
       else await renderUsers(host, ctx);
       content.replaceChildren(host);
     } catch (e) {
