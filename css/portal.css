@@ -122,3 +122,10 @@ body.role-technician .portal-nav { display: none !important; }
 .topbar__clock-time { font-size:.95rem; font-weight:750; color:#0c6042; }
 .topbar__clock-date { font-size:.7rem; color:#60756a; margin-top:3px; }
 @media(max-width:600px) { .topbar__clock-time {font-size:.8rem} .topbar__clock-date {font-size:.62rem} .topbar__clock {max-width:125px} }
+
+/* Employee portal uses the identical desktop sidebar shell as admin. */
+@media(min-width:901px) {
+  body.role-technician #app .sidebar { display:flex !important; width:var(--sidebar-w); transform:none !important; visibility:visible !important; }
+  body.role-technician #app .main { min-width:0; }
+}
+body.role-technician #app > .portal-nav { display:none !important; }
