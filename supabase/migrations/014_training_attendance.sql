@@ -3,7 +3,7 @@
 begin;
 create table if not exists public.training_sessions (
  id uuid primary key default gen_random_uuid(),
- training_type_id uuid not null references public.training_types(id),
+ training_type_id integer not null references public.training_types(id),
  title text not null check(length(trim(title)) between 3 and 180),
  venue text,
  starts_at timestamptz not null,
@@ -59,7 +59,7 @@ begin
 end $$;
 
 create or replace function public.attendance_create_session(
- p_training_type_id uuid, p_title text, p_starts_at timestamptz, p_ends_at timestamptz,
+ p_training_type_id integer, p_title text, p_starts_at timestamptz, p_ends_at timestamptz,
  p_venue text default null, p_grace_minutes integer default 15)
 returns uuid language plpgsql security definer set search_path=public as $$
 declare v_id uuid;
@@ -119,8 +119,8 @@ begin
  if v_at is null then raise exception 'Not checked in or check-out window closed'; end if;
  return v_at;
 end $$;
-revoke all on function public.attendance_admin_sessions(), public.attendance_create_session(uuid,text,timestamptz,timestamptz,text,integer),
+revoke all on function public.attendance_admin_sessions(), public.attendance_create_session(integer,text,timestamptz,timestamptz,text,integer),
  public.attendance_assign(uuid,uuid), public.attendance_time_in(uuid,uuid), public.attendance_time_out(uuid) from public,anon;
-grant execute on function public.attendance_admin_sessions(), public.attendance_create_session(uuid,text,timestamptz,timestamptz,text,integer),
+grant execute on function public.attendance_admin_sessions(), public.attendance_create_session(integer,text,timestamptz,timestamptz,text,integer),
  public.attendance_assign(uuid,uuid), public.attendance_time_in(uuid,uuid), public.attendance_time_out(uuid) to authenticated;
 commit;
