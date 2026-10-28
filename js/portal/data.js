@@ -14,13 +14,15 @@ async function fetchLive(sb) {
     sb.rpc('my_monitoring'), sb.rpc('my_penalties'),
     sb.from('v_my_retrainings').select('*').order('created_at', { ascending: false }),
     sb.from('v_my_notifications').select('*').order('created_at', { ascending: false }).limit(50),   // optional (migration 012)
+    sb.from('v_my_training').select('*').order('name'), // optional until migration 013
   ]);
   const bad = q.slice(0, 6).find((r) => r.error)?.error;
   if (bad) { const e = new Error(bad.message); e.code = bad.code; e.network = isNetworkError(bad); throw e; }
-  const note = q[6];
+  const note = q[6], training = q[7];
+  if (training.error && !optionalMissing(training.error)) { const e = new Error(training.error.message); e.code = training.error.code; throw e; }
   if (note.error && !optionalMissing(note.error)) { const e = new Error(note.error.message); e.code = note.error.code; e.network = isNetworkError(note.error); throw e; }
   return { profile: q[0].data, violations: q[1].data, evidence: q[2].data, monitoring: q[3].data?.[0] ?? null, penalties: q[4].data,
-    retrainings: q[5].data, notifications: note.error ? null : note.data };
+    retrainings: q[5].data, notifications: note.error ? null : note.data, training: training.error ? null : training.data };
 }
 
 // Evidence file paths / links are not kept offline (files cannot be opened without a connection anyway).

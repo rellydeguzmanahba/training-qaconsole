@@ -91,3 +91,28 @@ body.role-technician .portal-nav { display: flex; position: fixed; left: 0; righ
 .tl-today { position: absolute; top: 0; bottom: 6px; width: 2px; background: var(--text); z-index: 2; pointer-events: none; }
 .tl-today i { position: absolute; top: -2px; left: 50%; transform: translate(-50%, -100%); font-style: normal; font-size: .68rem; background: var(--text); color: #fff; padding: 1px 7px; border-radius: 999px; }
 .tl-axis { display: flex; justify-content: space-between; margin: 8px 0 12px 42px; }
+
+/* Phase 3 employee portal visual system — scoped to employee role only */
+body.role-technician { background: #f3f6f3; }
+body.role-technician .portal-welcome { padding: 24px 26px; border-radius: 22px; background: linear-gradient(125deg,#092f25,#116346 72%,#1b7651); color: #fff; box-shadow: 0 16px 36px rgba(7,53,38,.15); position:relative; overflow:hidden; }
+body.role-technician .portal-welcome::after { content:''; position:absolute; width:210px; height:210px; border:1px solid rgba(220,184,91,.28); border-radius:50%; right:-70px; top:-110px; pointer-events:none; box-shadow:0 0 0 36px rgba(255,255,255,.035); }
+body.role-technician .portal-welcome h2 { font-size:clamp(1.5rem,3vw,2.1rem); color:#fff; margin:6px 0; }
+body.role-technician .portal-welcome .muted,body.role-technician .portal-welcome .eyebrow { color:#e3f0e8; }
+body.role-technician .portal-welcome .eyebrow { letter-spacing:.16em; font-size:.7rem; font-weight:700; }
+body.role-technician .portal-card { border:1px solid #e2e9e3; border-radius:18px; background:#fff; box-shadow:0 7px 26px rgba(15,50,35,.055); }
+body.role-technician .portal-card__title { color:#23634a; letter-spacing:.09em; }
+body.role-technician .portal-nav { box-shadow:0 -10px 28px rgba(9,46,34,.08); border-color:#dbe7dd; }
+body.role-technician .portal-nav a { min-height:55px; justify-content:center; transition:background .18s,transform .18s; }
+body.role-technician .portal-nav a:hover { background:#e9f5ee; color:#07583b; transform:translateY(-2px); }
+body.role-technician .portal-nav a[aria-current="page"] { background:#0d6344; color:#fff; }
+body.role-technician .portal-nav a[aria-current="page"] svg { color:#e7c56f; }
+body.role-technician .pv { border:1px solid #e2e9e3; border-radius:16px; box-shadow:0 5px 20px rgba(15,50,35,.045); }
+body.role-technician .pv[open] { border-color:#91b9a1; }
+body.role-technician .pv summary:hover { background:#f3f9f4; border-radius:16px; }
+.portal-training-summary { display:flex; align-items:center; gap:16px; }
+.portal-training-summary strong { font-size:2rem; color:#0e6244; letter-spacing:-.04em; }
+.portal-training-summary span { font-size:.86rem; color:#63776a; }
+.portal-training-link { display:inline-flex; align-items:center; color:#0c6747; font-weight:700; text-decoration:none; width:fit-content; }
+.portal-training-link:hover { text-decoration:underline; }
+@media (max-width:480px) { body.role-technician .portal-welcome { padding:20px; border-radius:18px; } body.role-technician .portal-nav a { font-size:.65rem; } }
+@media (prefers-reduced-motion:reduce) { body.role-technician .portal-nav a { transition:none; } body.role-technician .portal-nav a:hover { transform:none; } }

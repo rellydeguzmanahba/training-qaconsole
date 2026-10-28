@@ -14,7 +14,7 @@ import { syncBanner, deviceCard } from '../portal/chrome.js';
 
 // Technician portal. Every read goes through the whitelisted v_my_* views / my_*() functions (migration 010b):
 // the server derives the technician from the signed-in account; no technician id is ever sent from the browser.
-const TABS = [['dashboard', 'Dashboard', 'grid'], ['violations', 'Violation History', 'alert'], ['penalties', 'Penalties', 'shield'], ['monitoring', 'Monitoring Days', 'refresh']];
+const TABS = [['dashboard', 'Dashboard', 'grid'], ['violations', 'My Violations', 'alert'], ['monitoring', 'My Monitoring', 'refresh'], ['training', 'My Training', 'check']];
 let card = null, nav = null, gen = 0;
 export function destroy() { gen++; card?.destroy(); card = null; }
 
@@ -55,6 +55,9 @@ async function renderDashboard(root, ctx, current) {
   if (!me) { root.append(el('div', { class: 'card' }, emptyState({ icon: 'info', title: 'No employee record linked', text: 'Contact your administrator.' }))); return; }
   const viol = { data: d.violations || [] }, mon = { data: d.monitoring ? [d.monitoring] : [] };
   const pen = { data: d.penalties || [] }, ret = { data: d.retrainings || [] };
+  const requiredTraining = (d.training || []).filter((x) => x.required);
+  const trainingDone = requiredTraining.filter((x) => x.completed_on).length;
+  const trainingPct = requiredTraining.length ? Math.round(trainingDone / requiredTraining.length * 100) : 0;
   const today = todayISO();
   const mv = monitoringView(mon.data?.[0] ?? null);
   const notices = buildNotices({ violations: viol.data, penalties: pen.data, retrainings: ret.data, monitoring: mon.data?.[0] ?? null, today });
@@ -129,5 +132,11 @@ async function renderDashboard(root, ctx, current) {
       el('p', { class: 'muted' }, new Intl.DateTimeFormat('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: APP.timezone }).format(new Date()))),
     el('div', { class: 'portal-grid' },
       el('section', { class: 'card portal-id', 'aria-label': 'Employee ID' }, idHost, el('p', { class: 'small muted portal-id__hint' }, 'Tap or click the card to flip it.')),
-      el('div', { class: 'portal-col' }, panel('Monitoring status', monitoring), notify, panel('Latest QA updates', updates), panel('Active penalties', penalties), panel('Retraining notices', retraining), deviceCard(ctx))));
+      el('div', { class: 'portal-col' }, panel('My training progress',
+        d.training == null ? none('Training progress will appear once enabled by an administrator.') :
+        el('div', { class: 'stack' },
+          el('div', { class: 'portal-training-summary' }, el('strong', {}, requiredTraining.length ? trainingPct + '%' : '—'), el('span', {}, requiredTraining.length ? `${trainingDone} of ${requiredTraining.length} required trainings complete` : 'No required training configured')),
+          el('div', { class: 'bar', role: 'progressbar', 'aria-valuenow': String(trainingPct), 'aria-valuemin': '0', 'aria-valuemax': '100' }, el('span', { style: `width:${trainingPct}%` })),
+          el('a', { href: '#/training', class: 'portal-training-link' }, 'View my training →'))),
+        panel('Monitoring status', monitoring), notify, panel('Latest QA updates', updates), panel('Active penalties', penalties), panel('Retraining notices', retraining), deviceCard(ctx))));
 }
