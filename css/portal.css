@@ -1,6 +1,6 @@
 /* Technician portal (Phase 3D). Mobile first. Loaded for technician accounts only. */
-body.role-technician #app .sidebar, body.role-technician #app .scrim, body.role-technician #app #menu-btn { display: none !important; }
-body.role-technician #app .view { padding-bottom: 96px; max-width: 1100px; }
+/* Employee uses the standard app sidebar and mobile drawer. */
+body.role-technician #app .view { padding-bottom: 28px; }
 .portal-nav { display: none; }
 body.role-technician .portal-nav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: rgba(255, 255, 255, .92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content: space-around; gap: 4px; }
@@ -116,3 +116,6 @@ body.role-technician .pv summary:hover { background:#f3f9f4; border-radius:16px;
 .portal-training-link:hover { text-decoration:underline; }
 @media (max-width:480px) { body.role-technician .portal-welcome { padding:20px; border-radius:18px; } body.role-technician .portal-nav a { font-size:.65rem; } }
 @media (prefers-reduced-motion:reduce) { body.role-technician .portal-nav a { transition:none; } body.role-technician .portal-nav a:hover { transform:none; } }
+
+/* Hide the retired bottom navigation; all employee routes are in the shared sidebar. */
+body.role-technician .portal-nav { display: none !important; }
