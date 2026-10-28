@@ -14,7 +14,7 @@ import { clearAllData } from './pwa/offline-store.js';
 import { resetPortalCache } from './portal/data.js';
 
 const $ = (id) => document.getElementById(id);
-const ROLE_LABEL = { technician: 'Technician', admin: 'Admin', qa: 'QA', trainer: 'Trainer', supervisor: 'Supervisor', viewer: 'Viewer' };
+const ROLE_LABEL = { technician: 'Employee', admin: 'Admin', qa: 'QA', trainer: 'Trainer', supervisor: 'Supervisor', viewer: 'Viewer' };
 
 let currentUserId = null;
 let idleTimer = null;
