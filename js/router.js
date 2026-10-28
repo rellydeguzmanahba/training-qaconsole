@@ -1,4 +1,4 @@
-import { ROUTES, DEFAULT_ROUTE } from './routes.js';
+import { ROUTES, EMPLOYEE_ROUTES, DEFAULT_ROUTE } from './routes.js';
 import { el } from './utils/dom.js';
 import { setActive } from './ui/sidebar.js';
 import { emptyState, errorState, loadingState } from './ui/states.js';
@@ -23,9 +23,7 @@ async function go(ctx) {
   const my = ++token;
   const view = document.getElementById('view');
   const { path, params } = parse();
-  const route = ctx.role === 'technician'
-    ? { path, title: 'My Portal', module: 'portal', roles: ['technician'], phase: 3 }    // technicians only ever see the portal
-    : ROUTES.find((r) => r.path === path);
+  const route = (ctx.role === 'technician' ? EMPLOYEE_ROUTES : ROUTES).find((r) => r.path === path);
 
   if (current?.destroy) { try { current.destroy(); } catch (e) { console.error(e); } }
   current = null;
