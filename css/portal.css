@@ -2,7 +2,6 @@
 /* Employee uses the standard app sidebar and mobile drawer. */
 body.role-technician #app .view { padding-bottom: 28px; }
 .portal-nav { display: none; }
-  border-top: 1px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content: space-around; gap: 4px; }
 .portal-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: .68rem; text-align: center; line-height: 1.15; }
 .portal-nav a[aria-current="page"] { color: var(--green-dark); background: var(--green-soft); font-weight: 650; }
 .portal-nav a:focus-visible { outline: 2px solid var(--green); }
@@ -142,3 +141,41 @@ body.role-technician #app > .portal-nav { display:none !important; }
 .attendance-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.attendance-stat{padding:18px;display:flex;flex-direction:column;gap:5px}.attendance-stat strong{font-size:1.7rem;color:#0b654b}.attendance-stat span{font-size:.85rem;color:#64766e}
 .attendance-create{padding:0!important;overflow:hidden}.attendance-form-grid{padding:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.attendance-form-grid[hidden]{display:none}.attendance-form-grid label{display:flex;flex-direction:column;gap:6px;font-size:.88rem;font-weight:600}.attendance-form-grid .btn{align-self:end;min-height:43px}.attendance-session-card{border-left:4px solid #167757}.attendance-session-card .row{flex-wrap:wrap;gap:10px}
 @media(max-width:700px){.attendance-stats{grid-template-columns:1fr 1fr}.attendance-form-grid{grid-template-columns:1fr}.attendance-hero{padding:18px}.attendance-hero .btn{width:100%}}
+
+/* Attendance: phone-first touch targets, no sideways scrolling. */
+#app .attendance-hero,#app .attendance-create,#app .attendance-session-card{min-width:0;max-width:100%}
+#app .attendance-session-card .row>.input{flex:1 1 230px;min-width:0}
+#app .attendance-session-card{overflow-wrap:anywhere}
+#app .attendance-session-card .row{display:flex;align-items:center;gap:10px}
+#app .attendance-session-card .btn{min-height:42px}
+#app .attendance-form-grid>*{min-width:0}
+#app .attendance-form-grid .input{min-width:0;max-width:100%}
+@media(max-width:600px){
+ #app .attendance-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:18px;border-radius:16px}
+ #app .attendance-hero h3{font-size:1.15rem;line-height:1.3}
+ #app .attendance-hero .btn{width:100%;min-height:48px;white-space:normal}
+ #app .attendance-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #app .attendance-stat{min-width:0;padding:13px 12px;border-radius:12px}
+ #app .attendance-stat:last-child{grid-column:1/-1}
+ #app .attendance-stat strong{font-size:1.45rem}
+ #app .attendance-stat span{font-size:.78rem;line-height:1.3}
+ #app .attendance-form-grid{display:flex;flex-direction:column;gap:12px;padding:14px}
+ #app .attendance-form-grid[hidden]{display:none}
+ #app .attendance-form-grid label{width:100%;min-width:0}
+ #app .attendance-form-grid .input{width:100%;font-size:16px;min-height:46px}
+ #app .attendance-form-grid .btn{width:100%;min-height:48px}
+ #app .attendance-session-card{padding:16px 13px;border-radius:14px}
+ #app .attendance-session-card h3{font-size:1.05rem;line-height:1.3}
+ #app .attendance-session-card .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #app .attendance-session-card .row>.input{grid-column:1/-1;width:100%;min-width:0;font-size:16px;min-height:46px}
+ #app .attendance-session-card .row>.btn{width:100%;min-width:0;min-height:46px;white-space:normal;overflow-wrap:anywhere;padding:9px 8px;line-height:1.25}
+ #app .attendance-session-card .row>.btn:last-child{grid-column:1/-1}
+ #app .attendance-session{min-width:0}
+ #app .attendance-session .btn{width:100%;min-height:44px}
+ #app .attendance-qr{justify-content:center}
+ #app .attendance-qr canvas,#app .attendance-qr img{max-width:min(100%,240px)}
+}
+@media(max-width:360px){
+ #app .attendance-session-card .row{grid-template-columns:minmax(0,1fr)}
+ #app .attendance-session-card .row>.btn{grid-column:1/-1}
+}
