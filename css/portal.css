@@ -129,3 +129,9 @@ body.role-technician .portal-nav { display: none !important; }
   body.role-technician #app .main { min-width:0; }
 }
 body.role-technician #app > .portal-nav { display:none !important; }
+
+/* Training session attendance */
+#app .attendance-session { display:flex; flex-direction:column; gap:7px; padding:13px 0; border-top:1px solid var(--border); }
+#app .attendance-session .btn { align-self:flex-start; }
+#app .attendance-qr { margin-top:12px; display:flex; justify-content:flex-start; }
+#app .attendance-qr canvas,#app .attendance-qr img { max-width:100%; background:#fff; padding:12px; border:1px solid var(--border); border-radius:12px; }
