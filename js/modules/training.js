@@ -8,7 +8,7 @@ import { fmtDate } from '../utils/dates.js';
 import { openTrainingForm, trainingToast } from './training-form.js';
 
 const ACTIVE = ['Probationary', 'Regular'];
-const TABS = [['overview', 'Completion'], ['matrix', 'Matrix'], ['missing', 'Missing training'], ['records', 'Records']];
+const TABS = [['overview', 'Completion'], ['matrix', 'Matrix'], ['missing', 'Missing training'], ['records', 'Records'], ['attendance', 'Attendance']];
 const nm = (t) => `${t.first_name} ${t.surname}`;
 
 export async function render(root, ctx) {
@@ -156,7 +156,8 @@ export async function render(root, ctx) {
   function draw() {
     tabs.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.id === S.tab)));
     const fn = { overview, matrix, missing, records }[S.tab];
-    body.replaceChildren(fn());
+    if (S.tab === 'attendance') { body.replaceChildren(); import('./training-attendance.js').then(m=>m.renderAttendanceAdmin(body,ctx)).catch(e=>ctx.toast(friendlyError(e),'error')); }
+    else body.replaceChildren(fn());
     scopeSel.hidden = S.tab === 'records';
   }
 
