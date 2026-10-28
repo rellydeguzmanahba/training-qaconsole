@@ -61,3 +61,12 @@ body.sidebar-collapsed .nav__item{justify-content:center}
 #app .topbar__clock-time { display: block; color: #0c6042; font-size: .96rem; font-weight: 750; line-height: 1.15; }
 #app .topbar__clock-date { display: block; color: #63766d; font-size: .72rem; line-height: 1.2; }
 @media(max-width:700px) { #app .topbar__right { gap: 9px; } #app .topbar__clock { min-width: 0; } #app .topbar__clock-time { font-size: .8rem; } #app .topbar__clock-date { font-size: .62rem; } }
+
+/* Philippine live clock sits at the bottom of the left sidebar, above the user card. */
+#app .sidebar__clock { flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; margin:10px 12px 12px; padding:17px 8px; border:1px solid rgba(222,199,126,.24); border-radius:14px; background:rgba(255,255,255,.065); text-align:center; font-variant-numeric:tabular-nums; }
+#app .sidebar__clock-time { color:#f2d88f; font-weight:800; font-size:1.35rem; letter-spacing:.015em; line-height:1.2; white-space:nowrap; }
+#app .sidebar__clock-date { color:#d4e5d9; font-size:.78rem; line-height:1.35; white-space:nowrap; }
+body.sidebar-collapsed #app .sidebar__clock { margin:8px 5px; padding:12px 3px; }
+body.sidebar-collapsed #app .sidebar__clock-time { font-size:.63rem; letter-spacing:-.03em; }
+body.sidebar-collapsed #app .sidebar__clock-date { display:none; }
+@media(max-width:900px) { body.sidebar-collapsed #app .sidebar__clock { margin:10px 12px 12px; padding:17px 8px; } body.sidebar-collapsed #app .sidebar__clock-time { font-size:1.35rem; letter-spacing:.015em; } body.sidebar-collapsed #app .sidebar__clock-date { display:block; } }
