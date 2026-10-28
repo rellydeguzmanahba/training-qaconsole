@@ -12,4 +12,11 @@ export const ROUTES = [
   { path: 'import',      title: 'Excel Import',         icon: 'upload',   module: 'import',      roles: ['admin'], phase: 13, group: 'Admin' },
   { path: 'settings',    title: 'Settings',             icon: 'settings', module: 'settings',    roles: ['admin'], phase: 6,  group: 'Admin' },
 ];
+// Employee accounts use the same sidebar shell as staff, but only personal routes.
+export const EMPLOYEE_ROUTES = [
+  { path: 'dashboard', title: 'My Dashboard', icon: 'grid', module: 'portal', roles: ['technician'], group: 'My Portal' },
+  { path: 'violations', title: 'My Violations', icon: 'alert', module: 'portal', roles: ['technician'], group: 'My Portal' },
+  { path: 'monitoring', title: 'My Monitoring', icon: 'refresh', module: 'portal', roles: ['technician'], group: 'My Portal' },
+  { path: 'training', title: 'My Training', icon: 'book', module: 'portal', roles: ['technician'], group: 'My Portal' },
+];
 export const DEFAULT_ROUTE = 'dashboard';
