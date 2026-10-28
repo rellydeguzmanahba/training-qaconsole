@@ -2,7 +2,6 @@
 /* Employee uses the standard app sidebar and mobile drawer. */
 body.role-technician #app .view { padding-bottom: 28px; }
 .portal-nav { display: none; }
-body.role-technician .portal-nav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: rgba(255, 255, 255, .92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content: space-around; gap: 4px; }
 .portal-nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: .68rem; text-align: center; line-height: 1.15; }
 .portal-nav a[aria-current="page"] { color: var(--green-dark); background: var(--green-soft); font-weight: 650; }
@@ -20,7 +19,7 @@ body.role-technician .portal-nav { display: flex; position: fixed; left: 0; righ
 .dot--good { background: var(--green); } .dot--warn { background: var(--gold); } .dot--bad { background: #c0392b; } .dot--info { background: #1d5fa8; }
 .list li > a { display: flex; gap: 10px; text-decoration: none; color: inherit; flex: 1; min-width: 0; }
 .list li.is-read { opacity: .65; }
-@media (min-width: 900px) { .portal-grid { grid-template-columns: minmax(300px, 380px) 1fr; align-items: start; } body.role-technician .portal-nav { max-width: 520px; margin: 0 auto; border: 1px solid var(--border); border-bottom: 0; border-radius: 16px 16px 0 0; } }
+@media (min-width: 900px) { .portal-grid { grid-template-columns: minmax(300px, 380px) 1fr; align-items: start; } }
 
 /* ---- employee ID card ---- */
 .idc { --gx: 50%; --gy: 40%; position: relative; width: 260px; perspective: 900px; perspective-origin: 50% 20%; user-select: none; -webkit-user-select: none; }
@@ -102,9 +101,7 @@ body.role-technician .portal-welcome .eyebrow { letter-spacing:.16em; font-size:
 body.role-technician .portal-card { border:1px solid #e2e9e3; border-radius:18px; background:#fff; box-shadow:0 7px 26px rgba(15,50,35,.055); }
 body.role-technician .portal-card__title { color:#23634a; letter-spacing:.09em; }
 body.role-technician .portal-nav { box-shadow:0 -10px 28px rgba(9,46,34,.08); border-color:#dbe7dd; }
-body.role-technician .portal-nav a { min-height:55px; justify-content:center; transition:background .18s,transform .18s; }
 body.role-technician .portal-nav a:hover { background:#e9f5ee; color:#07583b; transform:translateY(-2px); }
-body.role-technician .portal-nav a[aria-current="page"] { background:#0d6344; color:#fff; }
 body.role-technician .portal-nav a[aria-current="page"] svg { color:#e7c56f; }
 body.role-technician .pv { border:1px solid #e2e9e3; border-radius:16px; box-shadow:0 5px 20px rgba(15,50,35,.045); }
 body.role-technician .pv[open] { border-color:#91b9a1; }
@@ -119,3 +116,9 @@ body.role-technician .pv summary:hover { background:#f3f9f4; border-radius:16px;
 
 /* Hide the retired bottom navigation; all employee routes are in the shared sidebar. */
 body.role-technician .portal-nav { display: none !important; }
+
+/* Live Philippine clock in the shared app header. */
+.topbar__clock { display:flex; flex-direction:column; align-items:flex-end; line-height:1.2; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.topbar__clock-time { font-size:.95rem; font-weight:750; color:#0c6042; }
+.topbar__clock-date { font-size:.7rem; color:#60756a; margin-top:3px; }
+@media(max-width:600px) { .topbar__clock-time {font-size:.8rem} .topbar__clock-date {font-size:.62rem} .topbar__clock {max-width:125px} }
