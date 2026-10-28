@@ -2,7 +2,7 @@
 // Caches ONLY static app files (no personal data): the shell, scripts, styles, icons and the pinned Supabase library.
 // Supabase API / storage responses are never cached here. Offline personal data lives in IndexedDB (js/pwa/offline-store.js),
 // is limited to the signed-in technician, and is wiped on sign-out or account change.
-const VERSION = 'v4-hover';                       // bump to force clients to refresh the shell
+const VERSION = 'v5-employee-sidebar-clock';                       // bump to force clients to refresh the shell
 const SHELL = `ahba-shell-${VERSION}`, RUNTIME = `ahba-runtime-${VERSION}`, CDN = `ahba-cdn-${VERSION}`;
 const CDN_ALLOW = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js'];   // pinned = immutable
 const PRECACHE = [
@@ -20,6 +20,7 @@ const PRECACHE = [
   "css/employees.css",
   "css/layout.css",
   "css/portal.css",
+  "css/command-center.css",
   "css/theme.css",
   "js/ui/a11y.js",
   "js/ui/auth-screens.js",
@@ -56,6 +57,7 @@ const PRECACHE = [
   "js/portal/monitoring-tab.js",
   "js/portal/penalties-tab.js",
   "js/portal/tabs.js",
+  "js/portal/training-tab.js",
   "js/portal/violations-tab.js",
   "js/app.js",
   "js/main.js",
@@ -110,11 +112,9 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(fetch(e.request).then((r) => putIfOk(SHELL, 'index.html', r)).catch(async () => (await caches.match('index.html')) || (await caches.match('./')) || Response.error()));
   } else if (how === 'cdn') {
     e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => putIfOk(CDN, e.request, r))));
-  } else {                                                          // static: stale-while-revalidate
-    e.respondWith(caches.match(e.request).then((hit) => {
-      const net = fetch(e.request).then((r) => putIfOk(RUNTIME, e.request, r)).catch(() => hit);
-      return hit || net;
-    }));
+  } else {                                                          // static: network-first so new deployments appear promptly
+    e.respondWith(fetch(e.request).then((r) => putIfOk(RUNTIME, e.request, r))
+      .catch(async () => (await caches.match(e.request)) || Response.error()));
   }
 });
 
