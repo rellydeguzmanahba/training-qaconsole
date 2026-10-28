@@ -103,10 +103,43 @@ export async function renderAttendanceAdmin(root,ctx) {
      }
      if(!data?.length)reviewHost.append(el('p',{class:'muted'},'No employees assigned.'));
    }},'View Attendance & Photos');
+   const actions=el('div',{class:'attendance-manage-actions'});
+   const editor=el('div',{class:'attendance-form-grid'});
+   const editType=el('select',{class:'input','aria-label':'Edit training type'},(types.data||[]).map(t=>el('option',{value:t.id},t.name)));
+   editType.value=String(s.training_type_id||'');
+   const editTitle=el('input',{class:'input',value:s.title,'aria-label':'Edit title'});
+   const editVenue=el('input',{class:'input',value:s.venue||'','aria-label':'Edit venue'});
+   const editStart=el('input',{class:'input',type:'datetime-local',value:localValue(new Date(s.starts_at)),'aria-label':'Edit start'});
+   const editEnd=el('input',{class:'input',type:'datetime-local',value:localValue(new Date(s.ends_at)),'aria-label':'Edit end'});
+   const save=el('button',{class:'btn btn--primary',type:'button',onclick:async()=>{
+     if(!editTitle.value.trim()||!editStart.value||!editEnd.value)return ctx.toast('Complete the required session fields.','error');
+     if(new Date(editEnd.value)<=new Date(editStart.value))return ctx.toast('End time must be after start time.','error');
+     save.disabled=true;
+     const {error}=await ctx.sb.rpc('attendance_update_session',{p_session_id:s.id,p_training_type_id:Number(editType.value),
+       p_title:editTitle.value.trim(),p_starts_at:iso(editStart.value),p_ends_at:iso(editEnd.value),p_venue:editVenue.value});
+     save.disabled=false;
+     if(error)return ctx.toast(friendlyError(error),'error');
+     ctx.toast('Session updated.','success');await draw();
+   }},'Save Changes');
+   editor.append(el('label',{},'Training type',editType),el('label',{},'Session title',editTitle),
+     el('label',{},'Venue / location',editVenue),el('label',{},'Starts',editStart),
+     el('label',{},'Ends',editEnd),save);
+   editor.hidden=true;
+   actions.append(el('button',{class:'btn btn--sm',type:'button',onclick:()=>{
+     editor.hidden=!editor.hidden;
+   }},'Edit Session'));
+   if(ctx.role==='admin')actions.append(el('button',{class:'btn btn--sm btn--danger',type:'button',onclick:async()=>{
+     if(Number(s.participants)>0)return ctx.toast('Cannot delete: employees are assigned. Attendance records must be preserved.','error');
+     const ok=await ctx.confirm({title:'Delete this training session?',message:'This permanently deletes "'+s.title+'". Only sessions with no assigned employees can be deleted.',confirmText:'Delete Session',danger:true});
+     if(!ok)return;
+     const {error}=await ctx.sb.rpc('attendance_delete_session',{p_session_id:s.id});
+     if(error)return ctx.toast(friendlyError(error),'error');
+     ctx.toast('Session deleted.','success');await draw();
+   }},'Delete Session'));
    body.append(el('section',{class:'card portal-card attendance-session-card'},el('h3',{},s.title),
     el('p',{class:'small muted'},dateLocal(s.starts_at)+' – '+dateLocal(s.ends_at)+' · '+(s.venue||'No venue')),
     el('p',{class:'small'},s.checked_in+' checked in / '+s.participants+' assigned'),
-    el('div',{class:'row'},employee,assign,qrButton,copy,reviews),qrHost,reviewHost));
+    actions,editor,el('div',{class:'row'},employee,assign,qrButton,copy,reviews),qrHost,reviewHost));
   }
   if(!(sessions.data||[]).length)body.append(el('div',{class:'card portal-card'},'No sessions yet. Click + New Training Session to get started.'));
  }
