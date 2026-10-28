@@ -12,7 +12,8 @@ end $$;
 
 create or replace function pg_temp.as_owner() returns void language plpgsql as $$
 begin
-  perform pg_temp.as_owner();
+  -- SET ROLE NONE returns to the original SQL-session role; never recurse into this helper.
+  perform set_config('role', 'none', true);
   perform set_config('request.jwt.claims', '', true);
   perform set_config('request.jwt.claim.sub', '', true);
 end $$;

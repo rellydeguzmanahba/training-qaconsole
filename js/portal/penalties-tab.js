@@ -4,12 +4,16 @@ import { emptyState, errorState } from '../ui/states.js';
 import { friendlyError } from '../utils/errors.js';
 import { fmtDate } from '../utils/dates.js';
 import { ordinal } from '../portal/model.js';
+import { getPortal } from './data.js';
+import { syncBanner } from './chrome.js';
 
 // Penalties: pending (awaiting supervisor approval) is always shown apart from enforced penalties.
 export async function renderPenalties(root, ctx) {
-  const { sb } = ctx;
-  const [pen, ret] = await Promise.all([sb.rpc('my_penalties'), sb.from('v_my_retrainings').select('*').order('created_at', { ascending: false })]);
-  for (const r of [pen, ret]) if (r.error) { root.append(errorState(friendlyError(r.error), () => location.reload())); return; }
+  let d;
+  try { d = await getPortal(ctx); }
+  catch (e) { root.append(errorState(friendlyError(e), () => location.reload())); return; }
+  root.append(syncBanner(d));
+  const pen = { data: d.penalties || [] }, ret = { data: d.retrainings || [] };
   const inEffect = pen.data.filter((p) => p.enforced), pending = pen.data.filter((p) => p.approval_status === 'proposed');
   const history = pen.data.filter((p) => !p.enforced && p.approval_status !== 'proposed');
   const needRetraining = ret.data.filter((r) => r.result !== 'Passed');

@@ -4,13 +4,17 @@ import { emptyState, errorState } from '../ui/states.js';
 import { friendlyError } from '../utils/errors.js';
 import { fmtDate, todayISO } from '../utils/dates.js';
 import { monitoringView, buildTimeline, ordinal } from '../portal/model.js';
+import { getPortal } from './data.js';
+import { syncBanner } from './chrome.js';
 
 // Monitoring Days: summary + interactive timeline. Dates and rules come from the offense engine (my_monitoring / my_penalties).
 export async function renderMonitoring(root, ctx) {
-  const { sb } = ctx;
-  const [mon, pen] = await Promise.all([sb.rpc('my_monitoring'), sb.rpc('my_penalties')]);
-  for (const r of [mon, pen]) if (r.error) { root.append(errorState(friendlyError(r.error), () => location.reload())); return; }
-  const m = mon.data?.[0] ?? null, today = todayISO();
+  let d;
+  try { d = await getPortal(ctx); }
+  catch (e) { root.append(errorState(friendlyError(e), () => location.reload())); return; }
+  root.append(syncBanner(d));
+  const m = d.monitoring ?? null, today = todayISO();
+  const pen = { data: d.penalties || [] };
   const mv = monitoringView(m), tl = buildTimeline({ penalties: pen.data, monitoring: m, today });
 
   const stat = (label, value, sub) => el('div', { class: 'card' }, el('div', { class: 'card__title' }, label), el('div', { class: 'stat' }, value), sub ? el('div', { class: 'stat-sub' }, sub) : null);

@@ -9,6 +9,8 @@ import { friendlyError } from '../utils/errors.js';
 import { fmtDate, todayISO } from '../utils/dates.js';
 import { APP } from '../config.js';
 import { monitoringView, buildNotices, ordinal } from '../portal/model.js';
+import { getPortal } from '../portal/data.js';
+import { syncBanner, deviceCard } from '../portal/chrome.js';
 
 // Technician portal. Every read goes through the whitelisted v_my_* views / my_*() functions (migration 010b):
 // the server derives the technician from the signed-in account; no technician id is ever sent from the browser.
@@ -45,22 +47,14 @@ export async function render(root, ctx) {
 }
 
 async function renderDashboard(root, ctx, current) {
-  const { sb } = ctx;
-  const [prof, viol, mon, pen, ret] = await Promise.all([
-    sb.from('v_my_profile').select('*').maybeSingle(),
-    sb.from('v_my_violations').select('*').order('violation_date', { ascending: false }),
-    sb.rpc('my_monitoring'), sb.rpc('my_penalties'),
-    sb.from('v_my_retrainings').select('*').order('created_at', { ascending: false }),
-  ]);
-  if (prof.error) {
-    const missing = prof.error.code === 'PGRST205' || prof.error.code === '42P01' || /v_my_profile/.test(prof.error.message || '');
-    root.append(missing ? emptyState({ icon: 'info', title: 'Portal not enabled yet', text: 'Please ask your administrator.' }) : errorState(friendlyError(prof.error), () => location.reload()));
-    return;
-  }
-  for (const r of [viol, mon, pen, ret]) if (r.error) { root.append(errorState(friendlyError(r.error), () => location.reload())); return; }
-  const me = prof.data;
-  if (!me) { root.append(el('div', { class: 'card' }, emptyState({ icon: 'info', title: 'No employee record linked', text: 'Your account is not linked to an active employee record. Please contact your administrator.' }))); return; }
-
+  let d;
+  try { d = await getPortal(ctx); }
+  catch (e) { root.append(errorState(friendlyError(e), () => location.reload())); return; }
+  if (!current()) return;
+  const me = d.profile;
+  if (!me) { root.append(el('div', { class: 'card' }, emptyState({ icon: 'info', title: 'No employee record linked', text: 'Contact your administrator.' }))); return; }
+  const viol = { data: d.violations || [] }, mon = { data: d.monitoring ? [d.monitoring] : [] };
+  const pen = { data: d.penalties || [] }, ret = { data: d.retrainings || [] };
   const today = todayISO();
   const mv = monitoringView(mon.data?.[0] ?? null);
   const notices = buildNotices({ violations: viol.data, penalties: pen.data, retrainings: ret.data, monitoring: mon.data?.[0] ?? null, today });
@@ -130,10 +124,10 @@ async function renderDashboard(root, ctx, current) {
     el('div', { class: 'row', style: 'justify-content:space-between' }, el('h3', { class: 'portal-card__title' }, 'Notifications ', countBadge),
       notices.length ? el('button', { class: 'btn btn--sm', type: 'button', onclick: () => { notices.forEach((n) => read.add(n.id)); saveRead(uid, read); paintNotices(); } }, 'Mark all read') : null), list);
 
-  root.append(
+  root.append(syncBanner(d),
     el('header', { class: 'portal-welcome' }, el('span', { class: 'eyebrow' }, 'AHBA Training & QA'), el('h2', {}, `${greet}, ${me.first_name}`),
       el('p', { class: 'muted' }, new Intl.DateTimeFormat('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: APP.timezone }).format(new Date()))),
     el('div', { class: 'portal-grid' },
       el('section', { class: 'card portal-id', 'aria-label': 'Employee ID' }, idHost, el('p', { class: 'small muted portal-id__hint' }, 'Tap or click the card to flip it.')),
-      el('div', { class: 'portal-col' }, panel('Monitoring status', monitoring), notify, panel('Latest QA updates', updates), panel('Active penalties', penalties), panel('Retraining notices', retraining))));
+      el('div', { class: 'portal-col' }, panel('Monitoring status', monitoring), notify, panel('Latest QA updates', updates), panel('Active penalties', penalties), panel('Retraining notices', retraining), deviceCard(ctx))));
 }

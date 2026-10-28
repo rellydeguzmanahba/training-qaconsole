@@ -4,19 +4,19 @@ import { emptyState, errorState } from '../ui/states.js';
 import { friendlyError } from '../utils/errors.js';
 import { fmtDate } from '../utils/dates.js';
 import { openEvidence } from '../modules/evidence.js';
+import { getPortal } from './data.js';
+import { syncBanner } from './chrome.js';
 
 const PAGE = 10;
 
 // Violation History: the technician's own findings, with only the evidence QA chose to share.
 export async function renderViolations(root, ctx) {
-  const { sb } = ctx;
-  const [v, ev] = await Promise.all([
-    sb.from('v_my_violations').select('*').order('violation_date', { ascending: false }).order('id'),
-    sb.from('v_my_evidence').select('*'),
-  ]);
-  for (const r of [v, ev]) if (r.error) { root.append(errorState(friendlyError(r.error), () => location.reload())); return; }
-  const rows = v.data, evidence = new Map();
-  for (const e of ev.data) evidence.set(e.violation_id, [...(evidence.get(e.violation_id) || []), e]);
+  let d;
+  try { d = await getPortal(ctx); }
+  catch (e) { root.append(errorState(friendlyError(e), () => location.reload())); return; }
+  root.append(syncBanner(d));
+  const rows = d.violations || [], evidence = new Map();
+  for (const e of d.evidence || []) evidence.set(e.violation_id, [...(evidence.get(e.violation_id) || []), e]);
   const focus = ctx.params[0] || null;
 
   const status = el('select', { class: 'input', 'aria-label': 'Status' }, el('option', { value: '' }, 'All statuses'), ['Open', 'For Retraining', 'Closed'].map((s) => el('option', { value: s }, s)));

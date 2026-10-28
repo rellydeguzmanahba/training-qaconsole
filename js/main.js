@@ -9,9 +9,12 @@ import { can } from './permissions.js';
 import { toast } from './ui/toast.js';
 import { confirmDialog, showModal } from './ui/dialog.js';
 import { friendlyError } from './utils/errors.js';
+import { initPwa } from './pwa/register.js';
+import { clearAllData } from './pwa/offline-store.js';
+import { resetPortalCache } from './portal/data.js';
 
 const $ = (id) => document.getElementById(id);
-const ROLE_LABEL = { admin: 'Admin', qa: 'QA', trainer: 'Trainer', supervisor: 'Supervisor', viewer: 'Viewer' };
+const ROLE_LABEL = { technician: 'Technician', admin: 'Admin', qa: 'QA', trainer: 'Trainer', supervisor: 'Supervisor', viewer: 'Viewer' };
 
 let currentUserId = null;
 let idleTimer = null;
@@ -31,6 +34,8 @@ function stopSession() {
 }
 
 function showSignedOut() {
+  resetPortalCache();
+  void clearAllData();
   stopSession(); show('auth');
   renderLogin($('auth-root'), { onSubmit: signIn });
 }
@@ -49,6 +54,7 @@ function startSession(profile) {
     can: (action) => can(profile.role, action),
     toast, confirm: confirmDialog, showModal, navigate, friendlyError,
   };
+  initPwa(profile.role);
   startRouter(ctx);
 
   lastActive = Date.now();
