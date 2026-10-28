@@ -22,17 +22,43 @@ export async function attendanceCard(ctx) {
    body.replaceChildren(el('p',{class:'small muted'},'Attendance is recorded in Philippine time. You must be assigned to the session.'),el('div',{class:'row'},input,checkQr));
    if(!rows.length) body.append(el('p',{class:'muted'},'No training sessions assigned yet.'));
    for(const r of rows) {
-     const action=r.time_out ? null : el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{
-       const fn=r.time_in?'attendance_time_out':'attendance_time_in';
-       const args=r.time_in?{p_session_id:r.id}:{p_session_id:r.id,p_qr_token:null};
-       const {error:e}=await ctx.sb.rpc(fn,args);
-       if(e) return ctx.toast(friendlyError(e),'error');
-       ctx.toast(r.time_in?'Time out recorded.':'Time in recorded.','success'); resetPortalCache(); await paint();
-     }},r.time_in?'Time Out':'Time In');
+     const camera=el('input',{class:'input',type:'file',accept:'image/*',capture:'user','aria-label':'Take photo'});
+     const gallery=el('input',{class:'input',type:'file',accept:'image/jpeg,image/png,image/webp','aria-label':'Choose photo'});
+     const preview=el('img',{alt:'Selected attendance photo',style:'display:none;max-width:240px;border-radius:12px'});
+     let chosen=null;
+     for(const input of [camera,gallery])input.addEventListener('change',()=>{
+       chosen=input.files?.[0]||null;
+       if(chosen){preview.src=URL.createObjectURL(chosen);preview.style.display='block';}
+     });
+     const action=r.time_out?null:el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{
+       if(r.time_in){
+         const {error:e}=await ctx.sb.rpc('attendance_time_out',{p_session_id:r.id});
+         if(e)return ctx.toast(friendlyError(e),'error');
+         ctx.toast('Time out recorded.','success');resetPortalCache();await paint();return;
+       }
+       if(!chosen)return ctx.toast('Please submit a photo of yourself attending this training.','error');
+       if(!['image/jpeg','image/png','image/webp'].includes(chosen.type)||chosen.size>5242880||!chosen.size)
+         return ctx.toast('Photo must be JPG, PNG or WebP, up to 5 MB.','error');
+       const {data:{user},error:ue}=await ctx.sb.auth.getUser();
+       if(ue||!user)return ctx.toast('Please sign in again.','error');
+       const ext=chosen.type==='image/png'?'png':chosen.type==='image/webp'?'webp':'jpg';
+       const path=user.id+'/'+r.id+'/'+crypto.randomUUID()+'.'+ext;
+       action.disabled=true;action.textContent='Uploading photo…';
+       try{
+         const {error:up}=await ctx.sb.storage.from('training-attendance').upload(path,chosen,{contentType:chosen.type,upsert:false});
+         if(up)throw up;
+         const {error:check}=await ctx.sb.rpc('attendance_photo_time_in',{p_session_id:r.id,p_evidence_path:path});
+         if(check)throw check;
+         ctx.toast('Manual Time In submitted. Pending trainer verification.','success');resetPortalCache();await paint();
+       }catch(e){ctx.toast(friendlyError(e),'error');action.disabled=false;action.textContent='Submit Manual Time In';}
+     }},r.time_in?'Time Out':'Submit Manual Time In');
+     const evidence=r.time_in?null:el('div',{class:'stack'},
+       el('p',{class:'small muted'},'A photo of you at the training session is required (maximum 5 MB).'),
+       el('label',{},'Take Photo',camera),el('label',{},'Choose from Gallery',gallery),preview);
      body.append(el('div',{class:'attendance-session'},
        el('strong',{},r.title),el('span',{class:'small muted'},format(r.starts_at)+' – '+format(r.ends_at)),
        el('span',{class:'small muted'},'Status: '+r.attendance_status+' · In: '+format(r.time_in)+' · Out: '+format(r.time_out)),
-       action));
+       evidence,r.time_in?el('span',{class:'small muted'},'Verification: '+(r.verification_status||'—')):null,action));
    }
  }
  await paint(); return card;
