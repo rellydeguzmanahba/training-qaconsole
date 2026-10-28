@@ -16,6 +16,23 @@ import { resetPortalCache } from './portal/data.js';
 const $ = (id) => document.getElementById(id);
 const ROLE_LABEL = { technician: 'Employee', admin: 'Admin', qa: 'QA', trainer: 'Trainer', supervisor: 'Supervisor', viewer: 'Viewer' };
 
+let clockTimer = null;
+function startClock() {
+  clearInterval(clockTimer);
+  const host = document.querySelector('.topbar__right');
+  if (!host) return;
+  let clock = document.getElementById('ahba-live-clock');
+  if (!clock) {
+    clock = document.createElement('div'); clock.id = 'ahba-live-clock'; clock.className = 'topbar__clock';
+    clock.setAttribute('role', 'timer'); clock.setAttribute('aria-label', 'Philippine time');
+    clock.innerHTML = '<span class="topbar__clock-time"></span><span class="topbar__clock-date"></span>';
+    host.prepend(clock);
+  }
+  const timeFmt = new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true });
+  const dateFmt = new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', weekday:'short', month:'short', day:'numeric', year:'numeric' });
+  const tick = () => { const now = new Date(); clock.querySelector('.topbar__clock-time').textContent = timeFmt.format(now); clock.querySelector('.topbar__clock-date').textContent = dateFmt.format(now); };
+  tick(); clockTimer = setInterval(tick, 1000);
+}
 let currentUserId = null;
 let idleTimer = null;
 let lastActive = Date.now();
@@ -28,6 +45,7 @@ function show(which) {
 
 function stopSession() {
   stopRouter();
+  clearInterval(clockTimer); clockTimer = null;
   clearInterval(idleTimer); idleTimer = null;
   if (location.hash) history.replaceState(null, '', location.pathname + location.search);
   $('view').replaceChildren();
@@ -48,6 +66,7 @@ function startSession(profile) {
   out.replaceChildren(icon('logout'));
   out.onclick = () => signOut();
   initSidebar(profile.role);
+  startClock();
 
   const ctx = {
     sb, profile, role: profile.role,
