@@ -3,3 +3,5 @@ let probe;
 export const lmsColumnAvailable = (sb) => (probe ??= sb.from('technicians').select('has_lms_account').limit(1).then((r) => !r.error));
 let probeNo;
 export const employeeNoAvailable = (sb) => (probeNo ??= sb.from('technicians').select('employee_no').limit(1).then((r) => !r.error));
+let probeShare;
+export const evidenceShareAvailable = (sb) => (probeShare ??= sb.from('violation_evidence').select('visible_to_technician').limit(1).then((r) => !r.error));

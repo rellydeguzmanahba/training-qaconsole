@@ -1,4 +1,5 @@
 import { el } from '../utils/dom.js';
+import { errorState } from '../ui/states.js';
 import { dataTable } from '../ui/table.js';
 import { formModal } from '../ui/form.js';
 import { badge, SEVERITY_VARIANT, VIOLATION_STATUS_VARIANT, RESULT_VARIANT } from '../ui/badge.js';
@@ -8,6 +9,7 @@ import { ordinal } from '../utils/validate.js';
 import { openViolationForm } from './violation-form.js';
 import { openRetrainingForm } from './retraining-form.js';
 import { addFile, addLink, openEvidence, removeEvidence, removeObjects } from './evidence.js';
+import { evidenceShareAvailable } from '../utils/schema.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const section = (title, body, extra = null) =>
@@ -18,13 +20,14 @@ export async function renderDetail(root, ctx, id) {
   const missing = () => root.append(el('div', { class: 'card empty' }, el('h2', {}, 'Violation not found'), el('a', { href: '#/violations' }, 'Back to violations')));
   if (!UUID.test(id)) return missing();
   const { sb } = ctx;
+  const share = await evidenceShareAvailable(sb);
 
   let v, hist, people;
   try {
     const [a, prof] = await Promise.all([
       sb.from('violations').select(`*, technician:technicians(id,first_name,surname,company:companies(name)),
         action:action_types(name), violation_category_links(category_id,violation_categories(code,name)),
-        violation_evidence(id,storage_path,external_url,file_name,uploaded_by,created_at),
+        violation_evidence(id,storage_path,external_url,file_name,uploaded_by,created_at${share ? ',visible_to_technician' : ''}),
         retrainings(id,retraining_date,result,trainer,remarks,training_types(name))`).eq('id', id).maybeSingle(),
       sb.from('profiles').select('user_id,full_name'),
     ]);
@@ -37,7 +40,7 @@ export async function renderDetail(root, ctx, id) {
     hist = h.data;
   } catch (e) {
     console.error(e);
-    root.append(el('div', { class: 'alert alert--error' }, friendlyError(e)));
+    root.append(errorState(friendlyError(e), () => location.reload()));
     return;
   }
 
@@ -69,6 +72,14 @@ export async function renderDetail(root, ctx, id) {
     ctx.navigate('violations');
   };
 
+  const toggleShare = async (e) => {
+    const next = !e.visible_to_technician;
+    if (next && !(await ctx.confirm({ title: 'Share this evidence with the technician?', confirmText: 'Share',
+      message: 'The technician will be able to open this item in their portal. Only share evidence that is appropriate for them to see.' }))) return;
+    const { data, error } = await sb.from('violation_evidence').update({ visible_to_technician: next }).eq('id', e.id).select('id');
+    if (error || !data?.length) return ctx.toast(error ? friendlyError(error) : 'You do not have permission to change this.', 'error');
+    ctx.toast(next ? 'Shared with the technician.' : 'Now private.', 'success'); await reload();
+  };
   const addEvidence = async () => {
     const r = await formModal({ title: 'Add evidence', submitText: 'Add',
       intro: el('p', { class: 'muted small' }, 'Upload a JPG, PNG, WebP or PDF (max 10 MB), paste a link, or both.'),
@@ -106,6 +117,9 @@ export async function renderDetail(root, ctx, id) {
     columns: [{ key: 'file_name', label: 'Item', render: (e) => el('span', {}, e.file_name || 'File', ' ', badge(e.external_url ? 'Link' : 'File')) },
       { key: 'by', label: 'Added by', sort: (e) => people.get(e.uploaded_by) ?? '', render: (e) => people.get(e.uploaded_by) ?? '—' },
       { key: 'created_at', label: 'Added', render: (e) => fmtDateTime(e.created_at) },
+      ...(share ? [{ key: 'shared', label: 'Technician can see', nosort: true, render: (e) => (ctx.can('violations:write')
+        ? el('button', { class: 'btn btn--sm', type: 'button', onclick: () => toggleShare(e) }, e.visible_to_technician ? 'Shared · make private' : 'Private · share')
+        : badge(e.visible_to_technician ? 'Shared' : 'Private', e.visible_to_technician ? 'green' : '')) }] : []),
       { key: 'a', label: '', nosort: true, render: (e) => el('div', { class: 'cell-actions' },
         el('button', { class: 'btn btn--sm', type: 'button', onclick: () => openEvidence(ctx, e) }, 'Open'),
         ctx.can('violations:write') ? el('button', { class: 'btn btn--sm', type: 'button', onclick: async () => {

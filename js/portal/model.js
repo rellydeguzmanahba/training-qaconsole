@@ -37,3 +37,32 @@ export function buildNotices({ violations = [], penalties = [], retrainings = []
   if (mv.state === 'monitoring' || mv.state === 'banned') if (mv.holdUntil && ymd(mv.holdUntil) >= today) out.push({ id: `h:${ymd(mv.holdUntil)}`, at: today, tab: 'penalties', tone: 'bad', title: 'Deployment hold active', text: `Until ${ymd(mv.holdUntil)}` });
   return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 20);
 }
+
+// ---------- Monitoring timeline (Phase 3E) ----------
+// Uses the SAME rule as the offense engine: each offense opens a monitoring window of `monitoring_days` days.
+// penalties: my_penalties() rows; monitoring: my_monitoring() row (supplies monitoring_days and chain_start).
+export const addDays = (iso, n) => new Date(Date.parse(`${ymd(iso)}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
+export const diffDays = (a, b) => Math.round((Date.parse(`${ymd(a)}T00:00:00Z`) - Date.parse(`${ymd(b)}T00:00:00Z`)) / 864e5);
+
+export function buildTimeline({ penalties = [], monitoring = null, today }) {
+  const days = Number(monitoring?.monitoring_days || 0);
+  if (!penalties.length || !days) return null;
+  const asc = [...penalties].sort((a, b) => ymd(a.offense_date).localeCompare(ymd(b.offense_date)));
+  const chainStart = ymd(monitoring?.chain_start) || ymd(asc[0].offense_date);
+  const banned = monitoring?.monitoring_status === 'BANNED';
+  const current = asc.filter((p) => ymd(p.offense_date) >= chainStart);
+  const older = asc.filter((p) => ymd(p.offense_date) < chainStart);
+  const lastEnd = addDays(current[current.length - 1].offense_date, days);
+  const axisEnd = banned || today > lastEnd ? (today > lastEnd ? addDays(today, 3) : addDays(lastEnd, 3)) : lastEnd;
+  const span = Math.max(1, diffDays(axisEnd, chainStart));
+  const pct = (d) => Math.max(0, Math.min(100, (100 * diffDays(d, chainStart)) / span));
+  const lanes = current.map((p, i) => {
+    const start = ymd(p.offense_date), end = addDays(start, days), next = current[i + 1];
+    const state = next && ymd(next.offense_date) <= end ? 'escalated' : end < today ? 'completed' : 'active';
+    const hold = p.hold_until ? ymd(p.hold_until) : null;
+    return { ...p, start, end, state, left: pct(start), width: Math.max(1.5, pct(end) - pct(start)),
+      holdLeft: hold ? pct(start) : null, holdWidth: hold ? Math.max(1, pct(hold) - pct(start)) : null, banned: banned && i === current.length - 1 };
+  });
+  return { axisStart: chainStart, axisEnd, days, todayPct: pct(today), todayInRange: today >= chainStart && today <= axisEnd, lanes,
+    history: older.map((p) => ({ ...p, start: ymd(p.offense_date), end: addDays(p.offense_date, days) })).reverse() };
+}

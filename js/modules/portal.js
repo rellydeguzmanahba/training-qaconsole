@@ -1,6 +1,6 @@
 import { el } from '../utils/dom.js';
 import { badge, SEVERITY_VARIANT, VIOLATION_STATUS_VARIANT, RESULT_VARIANT } from '../ui/badge.js';
-import { emptyState, errorState } from '../ui/states.js';
+import { errorState, emptyState } from '../ui/states.js';
 import { icon } from '../ui/icons.js';
 import { mountIdCard } from '../ui/id-card3d.js';
 import { getKeyedLogoUrl } from '../ui/brand.js';
@@ -34,11 +34,11 @@ export async function render(root, ctx) {
   destroy();
   const mine = gen;
   ensureCss('css/portal.css');
-  const tab = TABS.some(([id]) => id === ctx.params[0]) ? ctx.params[0] : 'dashboard';
+  const tab = TABS.some(([id]) => id === ctx.route.path) ? ctx.route.path : 'dashboard';   // the router maps every hash to the portal
   setNav(tab);
   if (tab !== 'dashboard') {
-    const label = TABS.find(([id]) => id === tab)[1];
-    root.append(el('div', { class: 'card' }, emptyState({ icon: 'info', title: label, text: 'This section arrives in the next update.' })));
+    const { renderTab } = await import('../portal/tabs.js');
+    await renderTab(tab, root, ctx);
     return;
   }
   await renderDashboard(root, ctx, () => mine === gen);
