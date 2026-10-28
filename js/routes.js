@@ -4,6 +4,7 @@ const ALL = ['admin', 'qa', 'trainer', 'supervisor', 'viewer'];
 export const ROUTES = [
   { path: 'dashboard',   title: 'Dashboard',            icon: 'grid',     module: 'dashboard',   roles: ALL, group: 'Overview', phase: 11 },
   { path: 'technicians', title: 'Employee Details',      icon: 'users',    module: 'technicians', roles: ALL, group: 'Workforce', phase: 6 },
+  { path: 'attendance', title: 'Attendance', icon: 'check', module: 'attendance', roles: ['admin','trainer'], group: 'Workforce', phase: 7 },
   { path: 'training',    title: 'Training',             icon: 'book',     module: 'training',    roles: ALL, group: 'Workforce', phase: 7 },
   { path: 'violations',  title: 'QA Violations',        icon: 'alert',    module: 'violations',  roles: ALL, group: 'Quality & compliance', phase: 8 },
   { path: 'retraining',  title: 'Retraining',           icon: 'refresh',  module: 'retraining',  roles: ALL, group: 'Quality & compliance', phase: 9 },
