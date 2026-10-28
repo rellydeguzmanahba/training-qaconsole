@@ -37,7 +37,8 @@ export async function render(root, ctx) {
   const mine = gen;
   ensureCss('css/portal.css');
   const tab = TABS.some(([id]) => id === ctx.route.path) ? ctx.route.path : 'dashboard';   // the router maps every hash to the portal
-  setNav(tab);
+  // Navigation is provided by the shared admin-style sidebar.
+  document.querySelector('#app > .portal-nav')?.remove();
   if (tab !== 'dashboard') {
     const { renderTab } = await import('../portal/tabs.js');
     await renderTab(tab, root, ctx);
