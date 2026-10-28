@@ -14,7 +14,7 @@ import { syncBanner, deviceCard } from '../portal/chrome.js';
 
 // Technician portal. Every read goes through the whitelisted v_my_* views / my_*() functions (migration 010b):
 // the server derives the technician from the signed-in account; no technician id is ever sent from the browser.
-const TABS = [['dashboard', 'Dashboard', 'grid'], ['violations', 'Violation History', 'alert'], ['penalties', 'Penalties', 'shield'], ['monitoring', 'Monitoring Days', 'refresh']];
+const TABS = [['dashboard', 'Dashboard', 'grid'], ['violations', 'My Violations', 'alert'], ['monitoring', 'My Monitoring', 'refresh'], ['training', 'My Training', 'check']];
 let card = null, nav = null, gen = 0;
 export function destroy() { gen++; card?.destroy(); card = null; }
 
