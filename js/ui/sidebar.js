@@ -1,4 +1,4 @@
-import { ROUTES } from '../routes.js';
+import { ROUTES, EMPLOYEE_ROUTES } from '../routes.js';
 import { el } from '../utils/dom.js';
 import { icon } from './icons.js';
 import { ensureCss } from '../utils/styles.js';
@@ -19,7 +19,7 @@ export function initSidebar(role) {
   nav.replaceChildren();
   nav.setAttribute('aria-label', 'Main');
   let lastGroup = null;
-  for (const r of ROUTES.filter((x) => x.roles.includes(role))) {
+  for (const r of (role === 'technician' ? EMPLOYEE_ROUTES : ROUTES).filter((x) => x.roles.includes(role))) {
     if (r.group && r.group !== lastGroup) nav.append(el('div', { class: 'nav__group', role: 'presentation' }, r.group));
     lastGroup = r.group || null;
     nav.append(el('a', { class: 'nav__item', href: `#/${r.path}`, dataset: { path: r.path }, title: r.title },
