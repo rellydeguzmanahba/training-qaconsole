@@ -19,18 +19,18 @@ const ROLE_LABEL = { technician: 'Employee', admin: 'Admin', qa: 'QA', trainer: 
 let clockTimer = null;
 function startClock() {
   clearInterval(clockTimer);
-  const host = document.querySelector('.topbar__right');
+  const host = document.querySelector('#sidebar');
   if (!host) return;
   let clock = document.getElementById('ahba-live-clock');
   if (!clock) {
-    clock = document.createElement('div'); clock.id = 'ahba-live-clock'; clock.className = 'topbar__clock';
+    clock = document.createElement('div'); clock.id = 'ahba-live-clock'; clock.className = 'sidebar__clock';
     clock.setAttribute('role', 'timer'); clock.setAttribute('aria-label', 'Philippine time');
-    clock.innerHTML = '<span class="topbar__clock-time"></span><span class="topbar__clock-date"></span>';
-    host.prepend(clock);
+    clock.innerHTML = '<span class="sidebar__clock-time"></span><span class="sidebar__clock-date"></span>';
+    host.insertBefore(clock, host.querySelector('.sidebar__user') || host.querySelector('.sidebar__collapse'));
   }
   const timeFmt = new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true });
   const dateFmt = new Intl.DateTimeFormat('en-PH', { timeZone: 'Asia/Manila', weekday:'short', month:'short', day:'numeric', year:'numeric' });
-  const tick = () => { const now = new Date(); clock.querySelector('.topbar__clock-time').textContent = timeFmt.format(now); clock.querySelector('.topbar__clock-date').textContent = dateFmt.format(now); };
+  const tick = () => { const now = new Date(); clock.querySelector('.sidebar__clock-time').textContent = timeFmt.format(now); clock.querySelector('.sidebar__clock-date').textContent = dateFmt.format(now); };
   tick(); clockTimer = setInterval(tick, 1000);
 }
 let currentUserId = null;
