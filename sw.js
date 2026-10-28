@@ -2,7 +2,7 @@
 // Caches ONLY static app files (no personal data): the shell, scripts, styles, icons and the pinned Supabase library.
 // Supabase API / storage responses are never cached here. Offline personal data lives in IndexedDB (js/pwa/offline-store.js),
 // is limited to the signed-in technician, and is wiped on sign-out or account change.
-const VERSION = 'v9-attendance-workspace';                       // bump to force clients to refresh the shell
+const VERSION = 'v10-mobile-attendance';                       // bump to force clients to refresh the shell
 const SHELL = `ahba-shell-${VERSION}`, RUNTIME = `ahba-runtime-${VERSION}`, CDN = `ahba-cdn-${VERSION}`;
 const CDN_ALLOW = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js'];   // pinned = immutable
 const PRECACHE = [
@@ -60,6 +60,7 @@ const PRECACHE = [
   "js/portal/training-tab.js",
   "js/portal/attendance.js",
   "js/modules/training-attendance.js",
+  "js/modules/attendance.js",
   "js/portal/violations-tab.js",
   "js/app.js",
   "js/main.js",
