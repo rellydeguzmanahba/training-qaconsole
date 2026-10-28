@@ -65,7 +65,7 @@ async function renderList(root, ctx) {
   const count = el('span', { class: 'muted small' });
 
   const columns = [
-    { key: 'name', label: 'Technician', render: (r) => el('a', { href: `#/technicians/${r.id}` }, r.name) },
+    { key: 'name', label: 'Technician', render: (r) => el('a', { href: `#/technicians/${r.id}`, class: 'employee-peek-trigger', 'data-employee-id': String(r.id), 'aria-label': `View ${r.name} details`, title: 'Hover for quick details; click for full profile' }, r.name) },
     { key: 'company_name', label: 'Company' },
     { key: 'designation_name', label: 'Designation' },
     { key: 'employment_status', label: 'Status', render: (r) => badge(r.employment_status, EMPLOYMENT_VARIANT[r.employment_status]) },
@@ -76,6 +76,69 @@ async function renderList(root, ctx) {
       render: (r) => (r.offense ? badge(r.offense.deployment_status, deploymentVariant(r.offense.deployment_status)) : '—') },
   ];
   const table = dataTable({ columns, rows, pageSize: 25, initialSort: { key: 'name' }, empty: 'No technicians match your filters.' });
+  // Lightweight accessible quick-view: no additional requests or personal-data caching.
+  // Only fields already authorized and loaded for the current technician directory are displayed.
+  const peek = el('section', { class: 'employee-peek', role: 'tooltip', hidden: true });
+  const byId = new Map(rows.map((r) => [String(r.id), r]));
+  let activeTrigger = null;
+  const field = (label, value) => el('div', { class: 'employee-peek__field' },
+    el('span', { class: 'employee-peek__label' }, label),
+    el('strong', {}, value == null || value === '' ? '—' : String(value)));
+  const positionPeek = (trigger) => {
+    const rect = trigger.getBoundingClientRect();
+    const width = Math.min(340, window.innerWidth - 24);
+    peek.style.width = `${width}px`;
+    const height = peek.offsetHeight;
+    const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
+    const top = rect.bottom + height + 12 <= window.innerHeight ? rect.bottom + 8 : Math.max(12, rect.top - height - 8);
+    peek.style.left = `${left}px`;
+    peek.style.top = `${top}px`;
+  };
+  const showPeek = (trigger) => {
+    const row = byId.get(trigger.dataset.employeeId);
+    if (!row) return;
+    activeTrigger = trigger;
+    peek.replaceChildren(
+      el('div', { class: 'employee-peek__heading' },
+        el('span', { class: 'employee-peek__avatar', 'aria-hidden': 'true' }, (row.first_name?.[0] || 'A') + (row.surname?.[0] || 'H')),
+        el('div', {}, el('strong', { class: 'employee-peek__name' }, row.name),
+          el('span', { class: 'employee-peek__sub' }, row.designation_name || 'Technician'))),
+      el('div', { class: 'employee-peek__grid' },
+        field('Company', row.company_name), field('Employment', row.employment_status),
+        field('Training', `${row.done}/${total}`), field('Deployment', row.offense?.deployment_status),
+        field('Date hired', row.date_hired), field('Mobile', row.mobile)),
+      el('span', { class: 'employee-peek__hint' }, 'Click the name to open the complete profile')
+    );
+    peek.hidden = false;
+    positionPeek(trigger);
+  };
+  const hidePeek = () => { activeTrigger = null; peek.hidden = true; };
+  table.addEventListener('pointerover', (event) => {
+    if (event.pointerType === 'touch') return;
+    const trigger = event.target.closest?.('.employee-peek-trigger');
+    if (trigger && trigger !== activeTrigger) showPeek(trigger);
+  });
+  table.addEventListener('pointerout', (event) => {
+    if (activeTrigger && !activeTrigger.contains(event.relatedTarget)) hidePeek();
+  });
+  table.addEventListener('focusin', (event) => {
+    const trigger = event.target.closest?.('.employee-peek-trigger');
+    if (trigger) showPeek(trigger);
+  });
+  table.addEventListener('focusout', (event) => {
+    if (activeTrigger && !activeTrigger.contains(event.relatedTarget)) hidePeek();
+  });
+  table.addEventListener('click', (event) => {
+    // On touch devices the first tap shows the card; the next tap opens the profile.
+    const trigger = event.target.closest?.('.employee-peek-trigger');
+    if (trigger && matchMedia('(hover: none)').matches && activeTrigger !== trigger) {
+      event.preventDefault(); showPeek(trigger);
+    }
+  });
+  const dismiss = (event) => { if (event.key === 'Escape') hidePeek(); };
+  table.addEventListener('keydown', dismiss);
+  table.addEventListener('scroll', hidePeek, true);
+
 
   const apply = () => {
     const q = search.value.trim().toLowerCase();
@@ -99,6 +162,6 @@ async function renderList(root, ctx) {
       ctx.can('technicians:write') ? el('button', { class: 'btn btn--primary', type: 'button', onclick: add }, 'Add technician') : null),
     el('div', { class: 'toolbar' }, search, fCompany, fDesig, fStatus,
       el('button', { class: 'btn', type: 'button', onclick: () => { search.value = ''; fCompany.value = fDesig.value = fStatus.value = ''; apply(); } }, 'Reset')),
-    el('div', { class: 'card card--flush' }, table));
+    el('div', { class: 'card card--flush' }, table), peek);
   apply();
 }

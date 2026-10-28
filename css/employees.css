@@ -12,3 +12,18 @@
 .steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
 .step{padding:2px 12px;border-radius:999px;font-size:.8rem;border:1px solid var(--border);color:var(--muted)}
 .step--on{background:var(--green);border-color:var(--green);color:#fff}
+
+/* Technician directory quick-view card */
+.employee-peek[hidden]{display:none!important}
+.employee-peek{position:fixed;z-index:1500;box-sizing:border-box;max-height:calc(100vh - 24px);overflow:auto;padding:18px;border:1px solid rgba(179,147,75,.36);border-radius:18px;background:#fff;color:#17392d;box-shadow:0 20px 55px rgba(8,37,27,.23);pointer-events:none}
+.employee-peek__heading{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid #e6ece7}
+.employee-peek__avatar{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#0d5d42,#238963);color:white;font-weight:800}
+.employee-peek__name{display:block;font-size:15px;line-height:1.4}
+.employee-peek__sub{display:block;color:#61786b;font-size:12px}
+.employee-peek__grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;padding:15px 0 8px}
+.employee-peek__field{min-width:0;overflow-wrap:anywhere}
+.employee-peek__label{display:block;font-size:11px;color:#667e70;margin-bottom:3px}
+.employee-peek__field strong{font-size:12px;font-weight:650}
+.employee-peek__hint{display:block;margin-top:9px;padding-top:9px;border-top:1px solid #e6ece7;font-size:11px;color:#668071}
+.employee-peek-trigger{font-weight:650;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px}
+.employee-peek-trigger:hover,.employee-peek-trigger:focus-visible{text-decoration-color:currentColor}
