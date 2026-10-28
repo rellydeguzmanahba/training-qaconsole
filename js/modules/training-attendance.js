@@ -33,9 +33,29 @@ export async function renderAttendanceAdmin(root,ctx) {
    if(error)return ctx.toast(friendlyError(error),'error');
    ctx.toast('Session created. Assign employees below.','success');await draw();
   }},'Create session');
-  body.replaceChildren(el('h3',{},'Training attendance sessions'),
-   el('section',{class:'card portal-card'},el('h3',{},'New training session'),el('div',{class:'stack'},type,title,venue,
-    el('label',{},'Start (local time)',start),el('label',{},'End (local time)',end),create)));
+  const today=new Date(),later=new Date(today.getTime()+60*60*1000);
+  const localValue=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,16);};
+  start.value=localValue(today);end.value=localValue(later);
+  const form=el('div',{class:'attendance-form-grid'},el('label',{},'Training type',type),
+    el('label',{},'Session title',title),el('label',{},'Venue / location',venue),
+    el('label',{},'Starts',start),el('label',{},'Ends',end),create);
+  const toggle=el('button',{class:'btn btn--primary',type:'button',onclick:()=>{
+    form.hidden=!form.hidden;toggle.textContent=form.hidden?'+ New Training Session':'Close Session Form';
+  }},'+ New Training Session');
+  form.hidden=true;
+  const cards=sessions.data||[];
+  const now=Date.now();
+  const live=cards.filter(x=>new Date(x.starts_at).getTime()<=now&&new Date(x.ends_at).getTime()>=now).length;
+  const totalPending=cards.reduce((sum,x)=>sum+Math.max(0,Number(x.participants)-Number(x.checked_in)),0);
+  body.replaceChildren(
+    el('div',{class:'attendance-hero'},el('div',{},el('h3',{},'Attendance Command Center'),
+      el('p',{class:'muted small'},'Create sessions, assign employees, and verify photo evidence without leaving this page.')),toggle),
+    el('div',{class:'attendance-stats'},
+      el('div',{class:'card attendance-stat'},el('strong',{},String(cards.length)),el('span',{},'Total sessions')),
+      el('div',{class:'card attendance-stat'},el('strong',{},String(live)),el('span',{},'In progress')),
+      el('div',{class:'card attendance-stat'},el('strong',{},String(totalPending)),el('span',{},'Not yet checked in'))),
+    el('section',{class:'card portal-card attendance-create'},form),
+    el('h3',{},'Training Sessions'));
   for(const s of sessions.data||[]){
    const employee=el('select',{class:'input','aria-label':'Assign employee'},(techs.data||[]).map(t=>el('option',{value:t.id},t.first_name+' '+t.surname)));
    const assign=el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{
@@ -82,11 +102,12 @@ export async function renderAttendanceAdmin(root,ctx) {
      }
      if(!data?.length)reviewHost.append(el('p',{class:'muted'},'No employees assigned.'));
    }},'View Attendance & Photos');
-   body.append(el('section',{class:'card portal-card'},el('h3',{},s.title),
+   body.append(el('section',{class:'card portal-card attendance-session-card'},el('h3',{},s.title),
     el('p',{class:'small muted'},dateLocal(s.starts_at)+' – '+dateLocal(s.ends_at)+' · '+(s.venue||'No venue')),
     el('p',{class:'small'},s.checked_in+' checked in / '+s.participants+' assigned'),
     el('div',{class:'row'},employee,assign,qrButton,copy,reviews),qrHost,reviewHost));
   }
+  if(!(sessions.data||[]).length)body.append(el('div',{class:'card portal-card'},'No sessions yet. Click + New Training Session to get started.'));
  }
  await draw();
 }
