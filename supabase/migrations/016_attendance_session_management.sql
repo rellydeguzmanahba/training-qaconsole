@@ -1,7 +1,8 @@
 -- 016_attendance_session_management.sql
 -- Edit sessions (admin/trainer); delete only empty sessions (admin).
 begin;
-create or replace function public.attendance_admin_sessions()
+drop function if exists public.attendance_admin_sessions();
+create function public.attendance_admin_sessions()
 returns table(id uuid, title text, venue text, starts_at timestamptz, ends_at timestamptz,
  qr_token uuid, participants bigint, checked_in bigint, training_type_id integer)
 language plpgsql security definer set search_path=public as $$
@@ -48,6 +49,8 @@ begin
  end if;
  delete from public.training_sessions where id=p_session_id;
 end $$;
+revoke all on function public.attendance_admin_sessions() from public,anon;
+grant execute on function public.attendance_admin_sessions() to authenticated;
 revoke all on function public.attendance_update_session(uuid,integer,text,timestamptz,timestamptz,text),
  public.attendance_delete_session(uuid) from public,anon;
 grant execute on function public.attendance_update_session(uuid,integer,text,timestamptz,timestamptz,text),
