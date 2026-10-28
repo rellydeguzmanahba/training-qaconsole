@@ -1,7 +1,6 @@
 import { el } from '../utils/dom.js';
 import { badge, SEVERITY_VARIANT, VIOLATION_STATUS_VARIANT, RESULT_VARIANT } from '../ui/badge.js';
 import { errorState, emptyState } from '../ui/states.js';
-import { icon } from '../ui/icons.js';
 import { mountIdCard } from '../ui/id-card3d.js';
 import { getKeyedLogoUrl } from '../ui/brand.js';
 import { ensureCss } from '../utils/styles.js';
@@ -14,19 +13,8 @@ import { syncBanner, deviceCard } from '../portal/chrome.js';
 
 // Technician portal. Every read goes through the whitelisted v_my_* views / my_*() functions (migration 010b):
 // the server derives the technician from the signed-in account; no technician id is ever sent from the browser.
-const TABS = [['dashboard', 'Dashboard', 'grid'], ['violations', 'My Violations', 'alert'], ['monitoring', 'My Monitoring', 'refresh'], ['training', 'My Training', 'check']];
-let card = null, nav = null, gen = 0;
+let card = null, gen = 0;
 export function destroy() { gen++; card?.destroy(); card = null; }
-
-function setNav(tab) {
-  const app = document.getElementById('app');
-  if (!nav || !nav.isConnected) {
-    nav = el('nav', { class: 'portal-nav', 'aria-label': 'Technician portal' }, TABS.map(([id, label, ic]) =>
-      el('a', { href: `#/${id}`, dataset: { tab: id } }, icon(ic, 22), el('span', {}, label))));
-    app.append(nav);
-  }
-  nav.querySelectorAll('a').forEach((a) => (a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-}
 
 const readKey = (uid) => `ahba.portal.read.${uid}`;
 const loadRead = (uid) => { try { return new Set(JSON.parse(localStorage.getItem(readKey(uid)) || '[]')); } catch { return new Set(); } };
@@ -36,9 +24,7 @@ export async function render(root, ctx) {
   destroy();
   const mine = gen;
   ensureCss('css/portal.css');
-  const tab = TABS.some(([id]) => id === ctx.route.path) ? ctx.route.path : 'dashboard';   // the router maps every hash to the portal
-  // Navigation is provided by the shared admin-style sidebar.
-  document.querySelector('#app > .portal-nav')?.remove();
+  const tab = ctx.route.path;
   if (tab !== 'dashboard') {
     const { renderTab } = await import('../portal/tabs.js');
     await renderTab(tab, root, ctx);
