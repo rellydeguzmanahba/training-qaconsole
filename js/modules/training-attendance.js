@@ -7,7 +7,7 @@ function loadQr() {
  if(window.QRCode) return Promise.resolve();
  if(!qrLoader) qrLoader=new Promise((resolve,reject)=>{
    const s=document.createElement('script');
-   s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+   s.src='https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
    s.onload=resolve;s.onerror=()=>reject(new Error('QR generator unavailable. Use Copy Link instead.'));
    document.head.append(s);
  });
