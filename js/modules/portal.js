@@ -9,6 +9,7 @@ import { fmtDate, todayISO } from '../utils/dates.js';
 import { APP } from '../config.js';
 import { monitoringView, buildNotices, ordinal } from '../portal/model.js';
 import { getPortal } from '../portal/data.js';
+import { attendanceCard } from '../portal/attendance.js';
 import { syncBanner, deviceCard } from '../portal/chrome.js';
 
 // Technician portal. Every read goes through the whitelisted v_my_* views / my_*() functions (migration 010b):
@@ -114,12 +115,14 @@ async function renderDashboard(root, ctx, current) {
     el('div', { class: 'row', style: 'justify-content:space-between' }, el('h3', { class: 'portal-card__title' }, 'Notifications ', countBadge),
       notices.length ? el('button', { class: 'btn btn--sm', type: 'button', onclick: () => { notices.forEach((n) => read.add(n.id)); saveRead(uid, read); paintNotices(); } }, 'Mark all read') : null), list);
 
+  const attendance = await attendanceCard(ctx);
+  if (!current()) return;
   root.append(syncBanner(d),
     el('header', { class: 'portal-welcome' }, el('span', { class: 'eyebrow' }, 'AHBA Training & QA'), el('h2', {}, `${greet}, ${me.first_name}`),
       el('p', { class: 'muted' }, new Intl.DateTimeFormat('en-PH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: APP.timezone }).format(new Date()))),
     el('div', { class: 'portal-grid' },
       el('section', { class: 'card portal-id', 'aria-label': 'Employee ID' }, idHost, el('p', { class: 'small muted portal-id__hint' }, 'Tap or click the card to flip it.')),
-      el('div', { class: 'portal-col' }, panel('My training progress',
+      el('div', { class: 'portal-col' }, attendance, panel('My training progress',
         d.training == null ? none('Training progress will appear once enabled by an administrator.') :
         el('div', { class: 'stack' },
           el('div', { class: 'portal-training-summary' }, el('strong', {}, requiredTraining.length ? trainingPct + '%' : '—'), el('span', {}, requiredTraining.length ? `${trainingDone} of ${requiredTraining.length} required trainings complete` : 'No required training configured')),
