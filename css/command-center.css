@@ -1,0 +1,56 @@
+/* AHBA Command Center — visible 2026 redesign. Scoped to authenticated application. */
+#app{--bg:#edf3f0;--surface:#fff;--border:#dce8e1;--text:#142e28;--muted:#657d73;--green:#087451;--green-dark:#064832;--green-soft:#e3f3ea;--gold:#c6a452;--gold-dark:#96732e;--radius:19px;--shadow:0 12px 34px rgba(6,48,34,.07);background:radial-gradient(900px 560px at 85% -5%,#d4ebdf 0,transparent 70%),#edf3f0;color:var(--text)}
+#app .sidebar{background:linear-gradient(170deg,#0a342a 0%,#092b24 62%,#061d19 100%)!important;border-right:1px solid rgba(225,201,126,.2)!important;box-shadow:12px 0 32px rgba(4,34,24,.12)}
+#app .sidebar__brand{min-height:96px;padding:22px 18px;border-bottom:1px solid rgba(255,255,255,.1)}
+#app .brand-mark{background:linear-gradient(135deg,#d9bd72,#9b792f)!important;color:#12382c!important;border-radius:13px;font-size:1.35rem;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#app .brand-text{color:#fff;font-size:1.17rem;letter-spacing:.08em}
+#app .brand-text small{color:#c5d7cc;font-size:.64rem;letter-spacing:.14em}
+#app .sidebar__nav{padding:20px 12px;gap:5px}
+#app .nav__group{color:#9bb9a8!important;letter-spacing:.15em;padding-top:18px}
+#app .nav__item{color:#d6e8de!important;padding:12px 13px;border:1px solid transparent;border-radius:13px}
+#app .nav__item:hover{background:rgba(255,255,255,.1)!important;color:white!important}
+#app .nav__item[aria-current="page"]{background:linear-gradient(95deg,rgba(213,190,118,.24),rgba(255,255,255,.08))!important;border-color:rgba(216,190,113,.32);color:#fff!important;box-shadow:inset 3px 0 #d3b368}
+#app .nav__item[aria-current="page"]::before{display:none}
+#app .sidebar__collapse{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:white}
+#app .topbar{min-height:78px;background:rgba(248,252,249,.86)!important;border-bottom:1px solid #dce9e1;padding-inline:32px}
+#app .topbar__title{font-size:1.32rem!important;font-weight:750;letter-spacing:-.035em}
+#app .topbar__right .badge{border-radius:100px;padding:7px 13px}
+#app .view{max-width:1600px;padding:30px 36px 56px}
+#app .card{border:1px solid #e0eae3!important;border-radius:19px!important;background:rgba(255,255,255,.92)!important;box-shadow:0 8px 32px rgba(8,57,39,.055)!important}
+#app .dash{gap:34px}
+#app .dash .hero{min-height:350px;border:1px solid rgba(218,188,105,.26)!important;background:linear-gradient(112deg,#082f27 0%,#0d523c 55%,#0d6447 100%)!important;color:#fff;box-shadow:0 24px 48px rgba(5,53,35,.19)!important;isolation:isolate}
+#app .dash .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 45%,rgba(224,200,127,.22),transparent 36%),repeating-linear-gradient(130deg,transparent 0,transparent 45px,rgba(255,255,255,.018) 46px,transparent 47px);pointer-events:none;z-index:-1}
+#app .dash .hero__copy{padding:42px 12px 42px 42px;gap:14px}
+#app .dash .hero .eyebrow{color:#e4c980;letter-spacing:.2em;font-size:.7rem}
+#app .dash .hero h2{color:white;font-size:clamp(1.9rem,3vw,2.9rem);font-weight:760;letter-spacing:-.045em;max-width:15ch}
+#app .dash .hero .muted{color:#bed9cc}
+#app .dash .hero__chip{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);color:#d3e9dd;padding:8px 12px}
+#app .dash .hero__chip b{color:#f6df9c}
+#app .dash .hero__actions .btn{border-color:rgba(255,255,255,.3);color:#fff;background:rgba(255,255,255,.1)}
+#app .dash .hero__actions .btn--primary{background:#d3b16a;color:#113c2d;border-color:#d3b16a;font-weight:750}
+#app .dash .hero__actions .btn:hover{filter:brightness(1.12)}
+#app .dash .hero__stage{min-height:350px}
+#app .dash-section{position:relative}
+#app .dash-section>header{align-items:center;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid #dce8df}
+#app .dash-section>header h3{font-size:1.2rem;font-weight:760;letter-spacing:-.035em}
+#app .dash-section>header h3::before{content:"";display:inline-block;width:5px;height:20px;vertical-align:-4px;border-radius:5px;background:linear-gradient(#d5b76d,#0e7655);margin-right:12px}
+#app .dash-section>header p{color:#698077}
+#app .dash .kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}
+#app .dash .kpi .card{min-height:118px;padding:20px 20px 18px 23px;position:relative;overflow:hidden}
+#app .dash .kpi .card::before{left:0;top:0;bottom:0;width:4px;border-radius:0;background:linear-gradient(#d2b46d,#0c7b54)}
+#app .dash .kpi .card::after{content:"";position:absolute;right:-27px;top:-27px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(12,118,78,.07),transparent 70%);pointer-events:none}
+#app .dash .kpi .card__title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:#71847b;font-weight:760}
+#app .dash .kpi .stat{font-size:2.2rem;font-weight:800;color:#103d2e;line-height:1.25;margin:8px 0 3px}
+#app .dash .kpi .stat-sub{color:#7a8d83;font-size:.79rem}
+#app .dash .panels{gap:18px}
+#app .dash .panels>.card,#app .dash-section>.card{padding:24px}
+#app .dash .card__title{font-weight:750;color:#315a49;letter-spacing:.025em}
+#app .dash .kpi--red .card::before{background:#c75a55}
+#app .dash .kpi--gold .card::before{background:#cba54b}
+#app .dash .kpi--muted .card::before{background:#9faea6}
+#app .dash .hero-fallback img{background:rgba(255,255,255,.97);border:5px solid rgba(218,193,116,.4);box-shadow:0 20px 48px rgba(0,0,0,.24)}
+#app .dash .hero-fallback .ring{border-color:rgba(218,193,116,.45)}
+#app .table{border-radius:14px;overflow:hidden}
+@media(max-width:900px){#app .view{padding:18px 14px 40px}#app .topbar{min-height:66px;padding-inline:14px}#app .dash .hero__copy{padding:28px 22px 6px}#app .dash .hero__stage{min-height:210px;height:230px}#app .dash-section>header{align-items:flex-start;flex-direction:column;gap:4px}}
+@media(max-width:550px){#app .dash .hero h2{font-size:1.9rem}#app .dash .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#app .dash .kpi .card{padding:14px 10px 14px 15px;min-height:104px}#app .dash .kpi .stat{font-size:1.7rem}#app .dash .kpi .card__title{font-size:.64rem}#app .dash .panels{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){#app .dash .hero-fallback .ring{animation:none}}
