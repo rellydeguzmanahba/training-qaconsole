@@ -53,7 +53,7 @@ declare v_tech uuid; v_at timestamptz;
 begin
  v_tech:=public.my_technician_id();
  if v_tech is null then raise exception 'Employee account is not linked'; end if;
- if p_evidence_path !~ ('^'||auth.uid()::text||'/'||p_session_id::text||'/[0-9a-f-]{36}\\.(jpg|png|webp)$') then
+ if p_evidence_path !~ ('^'||auth.uid()::text||'/'||p_session_id::text||'/[0-9a-f-]{36}[.](jpg|png|webp)$') then
   raise exception 'Invalid evidence path'; end if;
  if not exists(select 1 from storage.objects where bucket_id='training-attendance'
  and name=p_evidence_path and owner_id=auth.uid()::text
@@ -74,10 +74,11 @@ end $$;
 -- Replace view to include verification state without exposing private file paths.
 create or replace view public.v_my_training_sessions with (security_barrier=true) as
 select s.id,s.title,s.venue,s.starts_at,s.ends_at,s.checkin_opens_at,s.checkin_closes_at,
- a.time_in,a.time_out,a.verification_status,
+ a.time_in,a.time_out,
  case when a.time_out is not null then 'Checked out'
  when a.time_in is not null then 'Checked in'
- when now()>s.ends_at then 'Absent' else 'Upcoming' end as attendance_status
+ when now()>s.ends_at then 'Absent' else 'Upcoming' end as attendance_status,
+ a.verification_status
 from public.training_attendance a join public.training_sessions s on s.id=a.session_id
 where a.technician_id=public.my_technician_id();
 grant select on public.v_my_training_sessions to authenticated;
