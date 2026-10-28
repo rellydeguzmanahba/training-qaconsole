@@ -135,3 +135,10 @@ body.role-technician #app > .portal-nav { display:none !important; }
 #app .attendance-session .btn { align-self:flex-start; }
 #app .attendance-qr { margin-top:12px; display:flex; justify-content:flex-start; }
 #app .attendance-qr canvas,#app .attendance-qr img { max-width:100%; background:#fff; padding:12px; border:1px solid var(--border); border-radius:12px; }
+
+/* Dedicated training attendance command center */
+.attendance-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:20px 24px;border-radius:18px;background:linear-gradient(115deg,#103c30,#14664b);color:#fff}
+.attendance-hero h3{margin:0 0 6px;font-size:1.3rem;color:#fff}.attendance-hero .muted{color:#d6e8df}.attendance-hero .btn{background:#eac76d;color:#15382c;border:0;font-weight:700}
+.attendance-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.attendance-stat{padding:18px;display:flex;flex-direction:column;gap:5px}.attendance-stat strong{font-size:1.7rem;color:#0b654b}.attendance-stat span{font-size:.85rem;color:#64766e}
+.attendance-create{padding:0!important;overflow:hidden}.attendance-form-grid{padding:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.attendance-form-grid[hidden]{display:none}.attendance-form-grid label{display:flex;flex-direction:column;gap:6px;font-size:.88rem;font-weight:600}.attendance-form-grid .btn{align-self:end;min-height:43px}.attendance-session-card{border-left:4px solid #167757}.attendance-session-card .row{flex-wrap:wrap;gap:10px}
+@media(max-width:700px){.attendance-stats{grid-template-columns:1fr 1fr}.attendance-form-grid{grid-template-columns:1fr}.attendance-hero{padding:18px}.attendance-hero .btn{width:100%}}
