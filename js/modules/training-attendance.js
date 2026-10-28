@@ -53,10 +53,39 @@ export async function renderAttendanceAdmin(root,ctx) {
     try{await navigator.clipboard.writeText(link.href);ctx.toast('Attendance link copied.','success');}
     catch{ctx.toast('Could not copy link.','error');}
    }},'Copy Link');
+   const reviewHost=el('div',{class:'stack'});
+   const reviews=el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{
+     const {data,error}=await ctx.sb.rpc('attendance_review_queue',{p_session_id:s.id});
+     if(error)return ctx.toast(friendlyError(error),'error');
+     reviewHost.replaceChildren();
+     for(const row of data||[]){
+       const line=el('div',{class:'attendance-session'},
+         el('strong',{},row.employee_name),
+         el('span',{class:'small muted'},'Time In: '+(row.time_in?dateLocal(row.time_in):'Not checked in')+
+           ' · Time Out: '+(row.time_out?dateLocal(row.time_out):'—')+
+           ' · Verification: '+row.verification_status));
+       if(row.evidence_path){
+         const {data:link,error:le}=await ctx.sb.storage.from('training-attendance').createSignedUrl(row.evidence_path,120);
+         if(!le&&link?.signedUrl)line.append(el('a',{href:link.signedUrl,target:'_blank',rel:'noopener noreferrer'},'View attendance photo (2-minute link)'));
+       }
+       if(row.verification_status==='pending'){
+         for(const [label,approved] of [['Approve',true],['Reject',false]]){
+           line.append(el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{
+             const note=approved?null:prompt('Reason for rejection (optional):');
+             const {error:e}=await ctx.sb.rpc('attendance_review',{p_session_id:s.id,p_technician_id:row.technician_id,p_approved:approved,p_note:note});
+             if(e)return ctx.toast(friendlyError(e),'error');
+             ctx.toast('Attendance reviewed.','success');reviews.click();
+           }},label));
+         }
+       }
+       reviewHost.append(line);
+     }
+     if(!data?.length)reviewHost.append(el('p',{class:'muted'},'No employees assigned.'));
+   }},'View Attendance & Photos');
    body.append(el('section',{class:'card portal-card'},el('h3',{},s.title),
     el('p',{class:'small muted'},dateLocal(s.starts_at)+' – '+dateLocal(s.ends_at)+' · '+(s.venue||'No venue')),
     el('p',{class:'small'},s.checked_in+' checked in / '+s.participants+' assigned'),
-    el('div',{class:'row'},employee,assign,qrButton,copy),qrHost));
+    el('div',{class:'row'},employee,assign,qrButton,copy,reviews),qrHost,reviewHost));
   }
  }
  await draw();
