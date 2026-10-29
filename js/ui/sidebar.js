@@ -39,7 +39,7 @@ export function initSidebar(role) {
     el('span', { class: 'avatar', 'aria-hidden': 'true' }, name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()),
     el('span', { class: 'sidebar__user-text' }, el('strong', {}, name), el('small', {}, roleText))), collapse);
 
-  sidebar.insertBefore(el('div',{class:'sidebar__build',title:'Dashboard release identifier'},'AHBA Console · Build 2026.10.29.10'),collapse);
+  sidebar.insertBefore(el('div',{class:'sidebar__build',title:'Dashboard release identifier'},'AHBA Console · Build 2026.10.29.11'),collapse);
   collapse.replaceChildren(icon('collapse'));
   collapse.setAttribute('aria-label', 'Collapse sidebar');
   try { body.classList.toggle('sidebar-collapsed', localStorage.getItem(KEY) === '1'); } catch { /* storage blocked */ }
