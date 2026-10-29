@@ -30,7 +30,7 @@ const LOOKUPS = {
 };
 
 const TABS = [...Object.entries(LOOKUPS).map(([k, v]) => ({ id: k, label: v.label })),
-  { id: 'penalty', label: 'Penalty rules' }, { id: 'monitoring', label: 'Monitoring period' }, { id: 'users', label: 'Users' }, { id: 'tech-accounts', label: 'Technician accounts' }];
+  { id: 'penalty', label: 'Offense rules' }, { id: 'penalty-structure', label: 'Penalty Structure' }, { id: 'monitoring', label: 'Monitoring period' }, { id: 'users', label: 'Users' }, { id: 'tech-accounts', label: 'Technician accounts' }];
 
 export async function render(root, ctx) {
   const content = el('div');
@@ -42,6 +42,7 @@ export async function render(root, ctx) {
       const host = el('div');
       if (LOOKUPS[id]) await renderLookup(host, ctx, LOOKUPS[id]);
       else if (id === 'penalty') await renderPenalty(host, ctx);
+      else if (id === 'penalty-structure') await renderPenaltyStructure(host, ctx);
       else if (id === 'monitoring') await renderMonitoring(host, ctx);
       else if (id === 'tech-accounts') await (await import('./technician-accounts.js')).renderAccounts(host, ctx);
       else await renderUsers(host, ctx);
@@ -178,4 +179,42 @@ async function renderUsers(host, ctx) {
         { key: 'active', label: 'Status', render: (r) => badge(r.active ? 'Active' : 'Inactive', r.active ? 'green' : 'amber') },
         { key: 'created_at', label: 'Created', render: (r) => fmtDateTime(r.created_at) },
         { key: 'a', label: '', nosort: true, render: (r) => el('button', { class: 'btn btn--sm', type: 'button', onclick: () => edit(r) }, 'Edit') }] })));
+}
+
+
+// Reference catalog from PPM-OPG-PRP-008 V1.0; distinct from AHBA's active offense engine.
+async function renderPenaltyStructure(host,ctx){
+ const {data,error}=await ctx.sb.from('qa_penalty_reference')
+   .select('id,violation_code,violation_type,description,penalty_text,source_document')
+   .order('violation_code').limit(1000);
+ if(error){
+   host.replaceChildren(el('div',{class:'alert alert--error'},
+     'Penalty reference unavailable. Run migrations/018_penalty_reference.sql and import AHBA_QA_Penalty_Reference_Seed.sql. Details: '+friendlyError(error)));
+   return;
+ }
+ const rows=data||[];
+ const q=el('input',{class:'input',type:'search',placeholder:'Search code, violation, description or penalty…','aria-label':'Search penalty structure'});
+ const count=el('span',{class:'muted small'},rows.length+' policy entries loaded');
+ const table=dataTable({rows,pageSize:25,empty:'No matching penalty policies found.',
+  columns:[
+   {key:'violation_code',label:'Policy code'},
+   {key:'violation_type',label:'Violation'},
+   {key:'description',label:'Description'},
+   {key:'penalty_text',label:'Equivalent penalty / offense levels',nosort:true,
+     render:r=>el('div',{class:'qa-policy-text'},r.penalty_text)}
+  ]});
+ q.addEventListener('input',()=>{
+  const term=q.value.trim().toLowerCase();
+  const filtered=rows.filter(r=>!term||[r.violation_code,r.violation_type,r.description,r.penalty_text]
+    .some(v=>String(v||'').toLowerCase().includes(term)));
+  table.setRows(filtered);count.textContent=filtered.length+' of '+rows.length+' entries';
+ });
+ host.replaceChildren(
+  el('div',{class:'qa-policy-head'},el('div',{},el('h3',{},'Structured Penalty Program'),
+    el('p',{class:'muted small'},'PPM-OPG-PRP-008 V1.0 · Reference only. Does not change the AHBA offense engine or automatically impose penalties.')),
+    el('span',{class:'badge badge--green'},rows.length+' entries')),
+  el('div',{class:'alert alert--info'},'The existing QA category codes (e.g. INW002) may not match workbook policy codes (e.g. NS-01). Unmatched codes are not assigned an invented penalty.'),
+  el('div',{class:'toolbar qa-policy-toolbar'},q,count),
+  el('div',{class:'card card--flush qa-policy-table'},table),
+  !rows.length?el('div',{class:'alert alert--error'},'No penalty entries are loaded. Import the penalty seed SQL after migration 018.'):null);
 }
