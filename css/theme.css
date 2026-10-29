@@ -384,3 +384,53 @@ body.sidebar-collapsed #app .sidebar__clock-time{font-size:.67rem;letter-spacing
 #app .offense-table .pager{background:#fff;border:1px solid #e3ebe5;border-radius:12px;padding:14px}
 @media(max-width:1150px){#app .offense-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){#app .offense-hero{flex-direction:column;align-items:stretch;padding:26px 23px}#app .offense-recalc{width:100%}#app .offense-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#app .offense-stat-card{padding:16px;min-height:115px}#app .offense-stat-value{font-size:2rem}#app .offense-tabs-header{flex-direction:column;align-items:flex-start}#app .offense-filter-panel{padding:15px}#app .offense-filter-grid{grid-template-columns:1fr}#app .offense-filter-title{align-items:flex-start;flex-direction:column}}
+
+/* OFFENSE WORKSPACE V11 — compact premium layout, both tabs */
+#app .offense-workspace{gap:0!important;max-width:1520px;margin-inline:auto}
+#app .offense-hero{min-height:0;padding:24px 29px;border-radius:16px;box-shadow:0 10px 26px rgba(16,55,41,.12)}
+#app .offense-hero h2{font-size:clamp(1.5rem,2.2vw,2.05rem);margin:8px 0 5px;line-height:1.12}
+#app .offense-hero p{font-size:.82rem}
+#app .offense-hero__eyebrow{font-size:.58rem}
+#app .offense-hero__notice{margin-top:12px;font-size:.67rem}
+#app .offense-recalc{padding:10px 14px;font-size:.77rem;border-radius:9px}
+#app .offense-section-heading{margin:20px 2px 10px}
+#app .offense-section-heading h3{font-size:1.05rem}
+#app .offense-stats{gap:10px;grid-template-columns:repeat(5,minmax(0,1fr))}
+#app .offense-stat-card{min-height:96px;padding:14px 16px;border-radius:12px}
+#app .offense-stat-card:after{left:16px;right:16px;height:2px}
+#app .offense-stat-label{font-size:.69rem;letter-spacing:.01em}
+#app .offense-stat-value{font-size:1.85rem;margin:3px 0;line-height:1.2}
+#app .offense-stat-footer{font-size:.62rem}
+#app .offense-tabs-header{margin:22px 2px 12px}
+#app .offense-tabs-header h3{font-size:1.08rem}
+#app .offense-tabs{padding:4px;border-radius:10px}
+#app .offense-tabs .tab{padding:9px 16px;font-size:.78rem}
+#app .offense-register{gap:11px}
+#app .offense-filter-panel{padding:14px 17px;border-radius:12px}
+#app .offense-filter-title{margin-bottom:10px}
+#app .offense-filter-title h3{font-size:.92rem}
+#app .offense-filter-title p{font-size:.72rem}
+#app .offense-filter-grid{grid-template-columns:minmax(180px,2fr) repeat(2,minmax(130px,1fr));gap:9px}
+#app .offense-filter-grid .input{min-height:37px;height:37px;font-size:.77rem;border-radius:8px}
+#app .offense-approvals-table+.offense-filter-grid{grid-template-columns:1fr}
+#app .offense-table .table{border-spacing:0 6px;min-width:950px}
+#app .offense-table .table thead th{padding:7px 10px;font-size:.61rem;letter-spacing:.075em}
+#app .offense-table .table tbody td{padding:11px 10px;font-size:.75rem}
+#app .offense-table .table tbody td:first-child{border-radius:9px 0 0 9px}
+#app .offense-table .table tbody td:last-child{border-radius:0 9px 9px 0}
+#app .offense-person{gap:8px;min-width:155px}
+#app .offense-avatar{width:32px;height:32px;border-radius:9px;font-size:.65rem}
+#app .offense-person__info{gap:3px}
+#app .offense-person__info a{font-size:.77rem}
+#app .offense-person__info small{font-size:.64rem}
+#app .offense-level{padding:5px 7px;font-size:.72rem}
+#app .offense-table .badge{font-size:.67rem;padding:5px 8px}
+#app .offense-table .cell-actions{display:flex;gap:6px;flex-wrap:nowrap}
+#app .offense-table .cell-actions .btn{padding:6px 10px;font-size:.7rem}
+#app .offense-table .pager{padding:9px 12px;border-radius:10px}
+#app .offense-approvals-table .table{min-width:1050px}
+#app .offense-approvals-table .table tbody td:nth-child(4){max-width:200px;line-height:1.45}
+#app .offense-approvals-table .table tbody td:nth-child(7){max-width:230px;line-height:1.45}
+#app .offense-table .table-wrap{overflow-x:auto;max-width:100%}
+@media(max-width:1150px){#app .offense-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){#app .offense-hero{padding:20px;gap:14px}#app .offense-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#app .offense-stat-card{min-height:86px;padding:12px}#app .offense-stat-value{font-size:1.6rem}#app .offense-tabs-header{margin-top:18px}#app .offense-filter-grid{grid-template-columns:1fr}#app .offense-filter-panel{padding:12px}#app .offense-table .table{min-width:820px}#app .offense-approvals-table .table{min-width:960px}}
