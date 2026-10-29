@@ -10,6 +10,14 @@ const specs=[
  ['description','Description',['description','details','violationdescription']],
  ['penalty_text','Penalty',['penalty','penalties','penaltystructure','correspondingpenalty']]
 ];
+function gridHeader(sheet){
+ const rows=window.XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false,blankrows:false});
+ for(let i=0;i<Math.min(rows.length,35);i++){
+  const names=rows[i].map(key);
+  if(names.includes('code')&&names.includes('type')&&names.includes('penalty'))return i;
+ }
+ return 0;
+}
 export function createPenaltyImporter(ctx,refresh){
  const root=el('section',{class:'card qa-import-card'});
  const file=el('input',{class:'input',type:'file',accept:'.xlsx,.xls','aria-label':'Penalty workbook'});
@@ -42,7 +50,7 @@ export function createPenaltyImporter(ctx,refresh){
      mapping[field]=hdr.findIndex(v=>aliases.includes(key(v)));
    }
    const controls=el('div',{class:'qa-import-fields'});
-   controls.append(selector('Worksheet',wb.SheetNames.map(x=>[x,x]),sheet,v=>{sheet=v;header=0;show();}),
+   controls.append(selector('Worksheet',wb.SheetNames.map(x=>[x,x]),sheet,v=>{sheet=v;header=gridHeader(wb.Sheets[sheet]);show();}),
      selector('Column header row',headerOptions,header,v=>{header=Number(v);show();}));
    for(const [field,label] of specs)controls.append(selector(label,[[-1,'— Not mapped —'],...columns],mapping[field],v=>{mapping[field]=Number(v);preview();}));
    area.append(controls);
@@ -91,7 +99,7 @@ export function createPenaltyImporter(ctx,refresh){
  file.addEventListener('change',async()=>{
    const f=file.files?.[0];if(!f)return;
    if(f.size>15*1024*1024){message('File exceeds 15 MB.');return;}
-   try{message('Reading workbook…');await loadXLSX();wb=window.XLSX.read(await f.arrayBuffer(),{type:'array'});sheet=wb.SheetNames[0];header=0;show();message('Choose the worksheet, header row and policy columns.');}
+   try{message('Reading workbook…');await loadXLSX();wb=window.XLSX.read(await f.arrayBuffer(),{type:'array'});sheet=wb.SheetNames[0];header=gridHeader(wb.Sheets[sheet]);show();message('Review the detected header row and policy columns before importing.');}
    catch(e){message('Could not read workbook: '+friendlyError(e));}
  });
  return root;
