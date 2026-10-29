@@ -313,3 +313,23 @@ body.sidebar-collapsed #app .sidebar__clock-time{font-size:.67rem;letter-spacing
 #app .qa-view-case:hover{background:#e1f2e7}
 @media(max-width:900px){#app .qa-hero{padding:27px 25px;min-height:180px}#app .qa-advanced-filters .qa-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){#app .qa-hero{flex-direction:column;align-items:flex-start;gap:22px;border-radius:16px}#app .qa-hero__action{width:100%}#app .qa-hero__foot{margin-top:17px}#app .qa-summary--premium .qa-summary__card{padding:15px 12px;min-height:90px}#app .qa-summary--premium .qa-summary__card strong{font-size:1.7rem}#app .qa-command-bar{padding:14px}#app .qa-command-bar__top{flex-wrap:wrap;gap:9px}#app .qa-command-bar__search{flex-basis:100%}#app .qa-advanced-toggle{width:100%}#app .qa-command-bar__bottom{align-items:flex-start;flex-direction:column}#app .qa-quick{padding:8px 11px;font-size:.72rem}#app .qa-advanced-filters .qa-filters{grid-template-columns:1fr 1fr}#app .qa-list-heading__meta{white-space:normal}}
+
+/* QA register — separated cards */
+#app .qa-violations-table{border:0;box-shadow:none;background:transparent;overflow:visible}
+#app .qa-violations-table .table{border-collapse:separate;border-spacing:0 10px;min-width:790px}
+#app .qa-violations-table .table thead th{border:0;background:transparent;padding:9px 17px;color:#778c80;letter-spacing:.1em}
+#app .qa-violations-table .table tbody tr{background:white;box-shadow:0 4px 16px rgba(15,50,35,.055);transition:box-shadow .18s,transform .18s}
+#app .qa-violations-table .table tbody tr:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(15,50,35,.12)}
+#app .qa-violations-table .table tbody td{padding:17px 15px;border-top:1px solid #e4ece6;border-bottom:1px solid #e4ece6;border-left:0;border-right:0}
+#app .qa-violations-table .table tbody td:first-child{border-left:1px solid #e4ece6;border-radius:13px 0 0 13px}
+#app .qa-violations-table .table tbody td:last-child{border-right:1px solid #e4ece6;border-radius:0 13px 13px 0}
+#app .qa-tech-preview{display:inline-flex;align-items:center;gap:10px}
+#app .qa-person-avatar{display:inline-flex;flex:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:#e3f1e7;color:#176044;font-size:.72rem;font-weight:800}
+#app .qa-person-name,.qa-date-cell,.qa-classification{display:inline-flex;flex-direction:column;align-items:flex-start;gap:5px}
+#app .qa-person-name a{text-decoration:none;font-weight:800}
+#app .qa-person-name small,#app .qa-date-cell small,#app .qa-classification small{font-size:.68rem;color:#8a9d91}
+#app .qa-code{white-space:normal;line-height:1.5}
+#app .qa-evidence{display:inline-block;background:#f0f6f1;border-radius:8px;padding:8px 10px;color:#466e56;white-space:nowrap;font-size:.73rem}
+#app .qa-view-case{background:#144a36;color:#fff!important;border-color:#144a36;padding:10px 14px}
+#app .qa-view-case:hover{background:#206e4d;color:#fff!important}
+#app .qa-violations-table .pager{background:#fff;border:1px solid #e4ece6;border-radius:13px;padding:14px}
