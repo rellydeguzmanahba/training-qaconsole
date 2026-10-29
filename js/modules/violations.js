@@ -92,16 +92,22 @@ export async function render(root, ctx) {
   const clear=el('button',{class:'btn btn--sm qa-clear-filters',type:'button',onclick:()=>{q.value='';for(const x of [fStatus,fSev,fCat,fCo,fCount,from,to])x.value='';apply();}},'Clear filters');
   const activeFilters=el('span',{class:'qa-active-filters small muted'},'All records');
 
+  const quickAll=el('button',{class:'qa-quick is-selected',type:'button'},'All cases');
+  const quickOpen=el('button',{class:'qa-quick',type:'button'},'Open cases');
+  const quickClosed=el('button',{class:'qa-quick',type:'button'},'Closed cases');
+  const quickMajor=el('button',{class:'qa-quick',type:'button'},'Major severity');
+  const quickButtons=[quickAll,quickOpen,quickClosed,quickMajor];
+  const quick=(button,status='',severity='')=>{fStatus.value=status;fSev.value=severity;quickButtons.forEach(b=>b.classList.toggle('is-selected',b===button));apply();};
+  quickAll.onclick=()=>quick(quickAll);quickOpen.onclick=()=>quick(quickOpen,'Open');quickClosed.onclick=()=>quick(quickClosed,'Closed');quickMajor.onclick=()=>quick(quickMajor,'','Major');
   const table = dataTable({ pageSize: 25, rows, initialSort: { key: 'violation_date', dir: 'desc' }, empty: 'No violations match your filters.',
     columns: [
       { key: 'violation_date', label: 'Date', render: (r) => el('a', { href: `#/violations/${r.id}` }, fmtDate(r.violation_date)) },
       { key: 'tech', label: 'Technician', render: techPreview },
-      { key: 'codes', label: 'Categories' },
+      { key: 'codes', label: 'Violation code', render:(r)=>el('span',{class:'qa-code'},r.codes||'Uncategorized') },
       { key: 'severity', label: 'Severity', render: (r) => badge(r.severity, SEVERITY_VARIANT[r.severity]) },
       { key: 'status', label: 'Status', render: (r) => badge(r.status, VIOLATION_STATUS_VARIANT[r.status]) },
-      { key: 'retraining_required', label: 'Counts', render: (r) => (r.retraining_required ? 'Yes' : 'No') },
-      { key: 'evidence', label: 'Evidence', render: (r) => (r.evidence ? badge(String(r.evidence), 'green') : badge('None', 'amber')) },
-      { key: 'reported_by', label: 'Reported by' }] });
+      { key: 'evidence', label: 'Files', render: (r) => (r.evidence ? badge(String(r.evidence), 'green') : el('span',{class:'muted small'},'—')) },
+      { key: 'action', label: '', nosort:true, render:(r)=>el('a',{href:`#/violations/${r.id}`,class:'qa-view-case'},'View case →') }] });
 
   const apply = () => {
     const t = q.value.trim().toLowerCase();
@@ -116,6 +122,8 @@ export async function render(root, ctx) {
     const active=[fStatus,fSev,fCat,fCo,fCount,from,to].filter(x=>!!x.value).length+(t?1:0);
     activeFilters.textContent=active?active+' active filter'+(active===1?'':'s'):'All records';
     clear.hidden=!active;
+    const selected=(!fStatus.value&&!fSev.value)?quickAll:(fStatus.value==='Open'&&!fSev.value)?quickOpen:(fStatus.value==='Closed'&&!fSev.value)?quickClosed:(!fStatus.value&&fSev.value==='Major')?quickMajor:null;
+    quickButtons.forEach(b=>b.classList.toggle('is-selected',b===selected));
   };
   [q, fStatus, fSev, fCat, fCo, fCount, from, to].forEach((n) => n.addEventListener('input', apply));
 
@@ -130,15 +138,29 @@ export async function render(root, ctx) {
     el('div',{class:'qa-summary__card'},el('span',{},'Total records'),el('strong',{},String(rows.length))),
     el('div',{class:'qa-summary__card'},el('span',{},'Open cases'),el('strong',{},String(rows.filter(r=>String(r.status).toLowerCase()==='open').length))),
     el('div',{class:'qa-summary__card'},el('span',{},'Technicians'),el('strong',{},String(byTech.size))));
+  const advanced=el('div',{class:'qa-advanced-filters',hidden:true},
+    el('div', { class: 'toolbar qa-filters' }, fStatus, fSev, fCat, fCo, fCount,
+      el('label', { class: 'row small' }, 'From', from), el('label', { class: 'row small' }, 'To', to)));
+  const advancedToggle=el('button',{class:'qa-advanced-toggle',type:'button','aria-expanded':'false'},'More filters  +');
+  advancedToggle.onclick=()=>{advanced.hidden=!advanced.hidden;advancedToggle.setAttribute('aria-expanded',String(!advanced.hidden));advancedToggle.textContent=advanced.hidden?'More filters  +':'Hide filters  −';};
+  root.classList.add('qa-violations-workspace');
   root.append(
-    el('div', { class: 'page-head qa-page-head' }, el('div', {},el('span',{class:'qa-eyebrow'},'QUALITY ASSURANCE / CASE MANAGEMENT'), el('h2', {}, 'QA Violations'),el('p',{class:'muted small'},'Review cases, monitor outcomes, and access technician violation history.')),
-      ctx.can('violations:write') ? el('button', { class: 'btn btn--primary', type: 'button', onclick: add }, 'Record violation') : null),
+    el('section',{class:'qa-hero'},
+      el('div',{class:'qa-hero__content'},
+        el('span',{class:'qa-hero__eyebrow'},'AHBA DEVELOPMENT  /  QUALITY & COMPLIANCE'),
+        el('h2',{},'Violation management'),
+        el('p',{},'A clearer view of every case, from first report to resolution.'),
+        el('div',{class:'qa-hero__foot'},el('span',{},'CASE REGISTER'),el('span',{},'·'),el('span',{},String(rows.length)+' total records'))),
+      ctx.can('violations:write')?el('button',{class:'qa-hero__action',type:'button',onclick:add},'＋  Record violation'):null),
     summary,
-    el('section',{class:'qa-filter-panel'},
-      el('div',{class:'qa-filter-panel__head'},el('div',{},el('h3',{},'Find a violation'),el('p',{class:'muted small'},'Search and refine the case register.')),clear),
-      el('div', { class: 'toolbar qa-filters' }, q, fStatus, fSev, fCat, fCo, fCount,
-        el('label', { class: 'row small' }, 'From', from), el('label', { class: 'row small' }, 'To', to))),
-    el('div',{class:'qa-list-heading'},el('div',{},el('h3',{},'Violation register'),el('span',{class:'muted small'},'Select a date to open the case · Tap ⓘ for technician history')),el('div',{class:'qa-list-heading__meta'},activeFilters,count)),
+    el('section',{class:'qa-command-bar'},
+      el('div',{class:'qa-command-bar__top'},
+        el('div',{class:'qa-command-bar__search'},el('span',{class:'qa-search-icon','aria-hidden':'true'},'⌕'),q),
+        advancedToggle),
+      el('div',{class:'qa-command-bar__bottom'},
+        el('div',{class:'qa-quick-list'},...quickButtons),clear),
+      advanced),
+    el('div',{class:'qa-list-heading'},el('div',{},el('span',{class:'qa-section-kicker'},'CASE DIRECTORY'),el('h3',{},'Violation register'),el('span',{class:'muted small'},'Select a record to review details and supporting evidence')),el('div',{class:'qa-list-heading__meta'},activeFilters,count)),
     el('div', { class: 'card card--flush qa-violations-table' }, table));
   apply();
 }
