@@ -22,7 +22,7 @@ const VIEWS = {
 
 export async function render(root, ctx) {
   const { sb } = ctx;
-  const S = { tab: 'monitoring', view: 'active', company: '', astatus: 'proposed', search: '' };
+  const S = { tab: 'monitoring', view: 'active', company: '', astatus: 'proposed', search: '', approvalSearch: '', approvalCompany: '' };
   let D;
   const body = el('div');
 
@@ -65,13 +65,26 @@ export async function render(root, ctx) {
   };
   const recalc = () => run(async () => { const { error } = await sb.rpc('recalculate_offenses', { p_technician: null }); if (error) throw error; }, 'Offenses recalculated.');
 
+  // Shared layout: both tabs use the exact same filter bar and register shell.
+  function registerShell(title,description,count,search,primary,company,holder){
+    return el('div',{class:'stack offense-register'},
+      el('div',{class:'offense-filter-panel'},
+        el('div',{class:'offense-filter-title'},el('div',{},el('h3',{},title),el('p',{class:'muted small'},description)),count),
+        el('div',{class:'offense-filter-grid'},search,primary,company)),holder);
+  }
+
+  function companySelect(value){
+    const co=el('select',{class:'input','aria-label':'Company'},el('option',{value:''},'All companies'),
+      D.companies.map(c=>el('option',{value:c.name},c.name)));
+    co.value=value;
+    return co;
+  }
+
   // ---------- tabs ----------
   function monitoring() {
     const sel = el('select', { class: 'input', 'aria-label': 'View' }, Object.entries(VIEWS).map(([k, [t]]) => el('option', { value: k }, t)));
     sel.value = S.view;
-    const co = el('select', { class: 'input', 'aria-label': 'Company' }, el('option', { value: '' }, 'All companies'),
-      D.companies.map((c) => el('option', { value: c.name }, c.name)));
-    co.value = S.company;
+    const co=companySelect(S.company);
     const search = el('input',{class:'input offense-search',type:'search',placeholder:'Search technician, company or penalty…','aria-label':'Search monitoring records'});
     search.value=S.search;
     const resultCount=el('span',{class:'offense-result-count'});
@@ -96,24 +109,30 @@ export async function render(root, ctx) {
     [sel, co].forEach((n) => n.addEventListener('input', paint));
     search.addEventListener('input',()=>{S.search=search.value;paint();});
     paint();
-    return el('div', { class: 'stack offense-register' },el('div',{class:'offense-filter-panel'},el('div',{class:'offense-filter-title'},el('div',{},el('h3',{},'Technician monitoring'),el('p',{class:'muted small'},'Find restrictions, offense levels and deployment eligibility.')),resultCount),el('div',{class:'offense-filter-grid'},search,sel,co)), holder);
+    return registerShell('Technician monitoring','Find restrictions, offense levels and deployment eligibility.',resultCount,search,sel,co,holder);
   }
 
   function approvals() {
     const sel = el('select', { class: 'input', 'aria-label': 'Approval status' },
       [['proposed', 'Awaiting approval'], ['approved', 'Approved'], ['rejected', 'Rejected'], ['', 'All']].map(([v, t]) => el('option', { value: v }, t)));
     sel.value = S.astatus;
+    const search=el('input',{class:'input offense-search',type:'search',placeholder:'Search technician, restriction or decision…','aria-label':'Search approval records'});
+    search.value=S.approvalSearch;
+    const co=companySelect(S.approvalCompany);
     const holder = el('div', { class: 'card card--flush offense-table offense-approvals-table' });
     const resultCount=el('span',{class:'offense-result-count'});
     const paint = () => {
       S.astatus = sel.value;
-      const rows = D.ac.filter((r) => !S.astatus || r.status === S.astatus);
+      S.approvalCompany=co.value;
+      const term=S.approvalSearch.trim().toLowerCase();
+      const allowed=S.approvalCompany?new Set(D.st.filter(r=>r.company===S.approvalCompany).map(r=>String(r.technician_id))):null;
+      const rows = D.ac.filter(r=>(!S.astatus||r.status===S.astatus)&&(!allowed||allowed.has(String(r.technician_id)))&&(!term||[nm(r.technician),r.penalty,r.status,r.decision_note,D.people.get(r.decided_by)].some(v=>String(v||'').toLowerCase().includes(term))));
       resultCount.textContent=`${rows.length} decision${rows.length===1?'':'s'}`;
       holder.replaceChildren(dataTable({ rows, pageSize: 25, initialSort: { key: 'offense_date', dir: 'desc' }, empty: 'Nothing here.',
         columns: [
           { key: 'offense_date', label: 'Offense date', render: (r) => el('a', { href: `#/violations/${r.violation_id}` }, fmtDate(r.offense_date)) },
-          { key: 'tech', label: 'Technician', sort: (r) => nm(r.technician), render: (r) => el('a', { href: `#/technicians/${r.technician_id}` }, nm(r.technician)) },
-          { key: 'offense_no', label: 'Offense', render: (r) => ordinal(r.offense_no) },
+          { key: 'tech', label: 'Technician', sort: (r) => nm(r.technician), render: (r) => el('div',{class:'offense-person'},el('span',{class:'offense-avatar','aria-hidden':'true'},nm(r.technician).split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()),el('div',{class:'offense-person__info'},el('a',{href:`#/technicians/${r.technician_id}`},nm(r.technician)),el('small',{},D.st.find(x=>String(x.technician_id)===String(r.technician_id))?.company||'Technician'))) },
+          { key: 'offense_no', label: 'Offense', render: (r) => el('span',{class:'offense-level'},ordinal(r.offense_no)) },
           { key: 'penalty', label: 'Proposed restriction' },
           { key: 'hold_until', label: 'Hold until', render: (r) => (r.hold_until ? fmtDate(r.hold_until) : '—') },
           { key: 'status', label: 'Status', render: (r) => el('div', {}, badge(APPROVAL_LABEL[r.status], APPROVAL_VARIANT[r.status]),
@@ -129,9 +148,10 @@ export async function render(root, ctx) {
             return null;
           } }] }));
     };
-    sel.addEventListener('input', paint);
+    [sel,co].forEach(node=>node.addEventListener('input',paint));
+    search.addEventListener('input',()=>{S.approvalSearch=search.value;paint();});
     paint();
-    return el('div', { class: 'stack offense-register' }, el('div',{class:'offense-filter-panel'},el('div',{class:'offense-filter-title'},el('div',{},el('h3',{},'Restriction approvals'),el('p',{class:'muted small'},'Review proposed actions and record approval decisions.')),resultCount),el('div',{class:'offense-filter-grid'},sel)), holder);
+    return registerShell('Restriction approvals','Review proposed actions and record approval decisions.',resultCount,search,sel,co,holder);
   }
 
   function draw() {
