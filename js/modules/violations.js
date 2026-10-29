@@ -46,7 +46,7 @@ export async function render(root, ctx) {
     const wrap=el('span',{class:'qa-tech-preview'});
     const link=el('a',{href:`#/technicians/${r.technician_id}`},r.tech);
     const trigger=el('button',{class:'qa-tech-preview__trigger',type:'button','aria-label':'Show violations and penalty reference for '+r.tech,'aria-expanded':'false'},'ⓘ');
-    const popup=el('div',{class:'qa-tech-preview__popup',role:'region','aria-label':'Violation history for '+r.tech});
+    const popup=el('div',{class:'qa-tech-preview__popup',role:'region','aria-label':'Violation history for '+r.tech,tabindex:'-1'});
     const history=byTech.get(r.technician_id)||[];
     popup.append(el('strong',{},r.tech+' · '+history.length+' recorded violation'+(history.length===1?'':'s')),
       el('p',{class:'small muted'},'Reference penalties from PPM-OPG-PRP-008 V1.0. Not an assessed fine or automatic disciplinary decision.'));
@@ -65,10 +65,17 @@ export async function render(root, ctx) {
       popup.append(section);
     }
     if(history.length>12)popup.append(el('p',{class:'small muted'},'Showing 12 of '+history.length+' records. Open technician profile for full history.'));
-    const close=()=>{wrap.classList.remove('is-open');trigger.setAttribute('aria-expanded','false');};
-    trigger.addEventListener('click',(e)=>{e.preventDefault();e.stopPropagation();const opening=!wrap.classList.contains('is-open');document.querySelectorAll('.qa-tech-preview.is-open').forEach(n=>n.classList.remove('is-open'));wrap.classList.toggle('is-open',opening);trigger.setAttribute('aria-expanded',String(opening));});
-    wrap.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
-    wrap.append(link,trigger,popup);
+    const place=()=>{const box=trigger.getBoundingClientRect();const width=Math.min(440,window.innerWidth-24);popup.style.width=width+'px';popup.style.left=Math.max(12,Math.min(box.left,window.innerWidth-width-12))+'px';popup.style.top=(box.bottom+8+Math.min(380,window.innerHeight*.6)>window.innerHeight?Math.max(12,box.top-Math.min(380,window.innerHeight*.6)-8):box.bottom+8)+'px';};
+    const close=()=>{wrap.classList.remove('is-open');trigger.setAttribute('aria-expanded','false');popup.remove();};
+    const open=()=>{document.querySelectorAll('.qa-tech-preview.is-open').forEach(n=>n.dispatchEvent(new Event('qa-close')));place();document.body.append(popup);wrap.classList.add('is-open');trigger.setAttribute('aria-expanded','true');};
+    wrap.addEventListener('qa-close',close);
+    trigger.addEventListener('click',(e)=>{e.preventDefault();e.stopPropagation();wrap.classList.contains('is-open')?close():open();});
+    wrap.addEventListener('mouseenter',()=>{if(matchMedia('(hover:hover)').matches&&!wrap.classList.contains('is-open'))open();});
+    wrap.addEventListener('mouseleave',(e)=>{if(!popup.contains(e.relatedTarget)&&matchMedia('(hover:hover)').matches)close();});
+    popup.addEventListener('mouseleave',(e)=>{if(!wrap.contains(e.relatedTarget)&&matchMedia('(hover:hover)').matches)close();});
+    popup.addEventListener('keydown',e=>{if(e.key==='Escape'){close();trigger.focus();}});
+    document.addEventListener('click',e=>{if(!wrap.contains(e.target)&&!popup.contains(e.target)&&wrap.classList.contains('is-open'))close();},{signal:ctx.signal||undefined});
+    wrap.append(link,trigger);
     return wrap;
   };
   const sel = (label, opts) => el('select', { class: 'input', 'aria-label': label },
@@ -114,11 +121,17 @@ export async function render(root, ctx) {
     } catch (e) { ctx.toast(friendlyError(e), 'error'); }
   };
 
+  const summary=el('div',{class:'qa-summary'},
+    el('div',{class:'qa-summary__card'},el('span',{},'Total records'),el('strong',{},String(rows.length))),
+    el('div',{class:'qa-summary__card'},el('span',{},'Open cases'),el('strong',{},String(rows.filter(r=>String(r.status).toLowerCase()==='open').length))),
+    el('div',{class:'qa-summary__card'},el('span',{},'Technicians'),el('strong',{},String(byTech.size))));
   root.append(
     el('div', { class: 'page-head' }, el('div', {}, el('h2', {}, 'QA Violations'), count),
       ctx.can('violations:write') ? el('button', { class: 'btn btn--primary', type: 'button', onclick: add }, 'Record violation') : null),
-    el('div', { class: 'toolbar' }, q, fStatus, fSev, fCat, fCo, fCount,
+    summary,
+    el('div', { class: 'toolbar qa-filters' }, q, fStatus, fSev, fCat, fCo, fCount,
       el('label', { class: 'row small' }, 'From', from), el('label', { class: 'row small' }, 'To', to)),
-    el('div', { class: 'card card--flush' }, table));
+    el('p',{class:'muted small qa-preview-hint'},'Hover over a technician name or tap ⓘ to review recorded violations and policy penalty references.'),
+    el('div', { class: 'card card--flush qa-violations-table' }, table));
   apply();
 }
