@@ -14,7 +14,7 @@ export function initSidebar(role) {
   installTabKeys();
   document.body.classList.toggle('role-technician', role === 'technician');
   ensureCss('css/portal.css');
-  ensureCss('css/mobile.css?v=20261029n'); // Attendance workspace styles are needed for admin and trainer too.
+  ensureCss('css/mobile.css?v=20261029o'); // Attendance workspace styles are needed for admin and trainer too.
   const app = document.getElementById('app');
   const nav = document.getElementById('nav');
   nav.replaceChildren();
@@ -40,7 +40,7 @@ export function initSidebar(role) {
     el('span', { class: 'avatar', 'aria-hidden': 'true' }, name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()),
     el('span', { class: 'sidebar__user-text' }, el('strong', {}, name), el('small', {}, roleText))), collapse);
 
-  sidebar.insertBefore(el('div',{class:'sidebar__build',title:'Dashboard release identifier'},'AHBA Console · Build 2026.10.29.14'),collapse);
+  sidebar.insertBefore(el('div',{class:'sidebar__build',title:'Dashboard release identifier'},'AHBA Console · Build 2026.10.29.15'),collapse);
   collapse.replaceChildren(icon('collapse'));
   collapse.setAttribute('aria-label', 'Collapse sidebar');
   try { body.classList.toggle('sidebar-collapsed', localStorage.getItem(KEY) === '1'); } catch { /* storage blocked */ }
