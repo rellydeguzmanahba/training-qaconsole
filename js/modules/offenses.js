@@ -22,7 +22,7 @@ const VIEWS = {
 
 export async function render(root, ctx) {
   const { sb } = ctx;
-  const S = { tab: 'monitoring', view: 'active', company: '', astatus: 'proposed' };
+  const S = { tab: 'monitoring', view: 'active', company: '', astatus: 'proposed', search: '' };
   let D;
   const body = el('div');
 
@@ -72,16 +72,20 @@ export async function render(root, ctx) {
     const co = el('select', { class: 'input', 'aria-label': 'Company' }, el('option', { value: '' }, 'All companies'),
       D.companies.map((c) => el('option', { value: c.name }, c.name)));
     co.value = S.company;
-    const holder = el('div', { class: 'card card--flush' });
+    const search = el('input',{class:'input offense-search',type:'search',placeholder:'Search technician, company or penalty…','aria-label':'Search monitoring records'});
+    search.value=S.search;
+    const resultCount=el('span',{class:'offense-result-count'});
+    const holder = el('div', { class: 'card card--flush offense-table' });
     const paint = () => {
       S.view = sel.value; S.company = co.value;
-      const rows = D.st.filter((r) => VIEWS[S.view][1](r) && (!S.company || r.company === S.company));
+      const term=S.search.trim().toLowerCase();
+      const rows = D.st.filter((r) => VIEWS[S.view][1](r) && (!S.company || r.company === S.company) && (!term || [r.full_name,r.company,r.current_penalty,r.monitoring_status].some(v=>String(v||'').toLowerCase().includes(term))));
+      resultCount.textContent=`${rows.length} technician${rows.length===1?'':'s'}`;
       holder.replaceChildren(dataTable({ rows, pageSize: 25, initialSort: { key: 'current_offense_no', dir: 'desc' }, empty: 'No technicians in this view.',
         columns: [
-          { key: 'full_name', label: 'Technician', render: (r) => el('a', { href: `#/technicians/${r.technician_id}` }, r.full_name) },
-          { key: 'company', label: 'Company' },
+          { key: 'full_name', label: 'Technician', render: (r) => el('div',{class:'offense-person'},el('span',{class:'offense-avatar','aria-hidden':'true'},String(r.full_name||'?').split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()),el('div',{class:'offense-person__info'},el('a', { href: `#/technicians/${r.technician_id}` }, r.full_name),el('small',{},r.company||'No company'))) },
           { key: 'monitoring_status', label: 'Monitoring', render: (r) => badge(r.monitoring_status, MONITORING_VARIANT[r.monitoring_status]) },
-          { key: 'current_offense_no', label: 'Offense', render: (r) => (r.current_offense_no ? ordinal(r.current_offense_no) : '—') },
+          { key: 'current_offense_no', label: 'Offense', render: (r) => el('span',{class:'offense-level'},r.current_offense_no ? ordinal(r.current_offense_no) : '—') },
           { key: 'monitoring_until', label: 'Until', render: (r) => (r.current_offense_no ? fmtDate(r.monitoring_until) : '—') },
           { key: 'current_penalty', label: 'Current penalty' },
           { key: 'deployment_status', label: 'Deployment', render: (r) => badge(r.deployment_status, deploymentVariant(r.deployment_status)) },
@@ -90,15 +94,16 @@ export async function render(root, ctx) {
             ? el('div', { class: 'small' }, `${ordinal(r.next_offense_no)}: `, r.next_if_minor === r.next_if_major ? r.next_if_minor : `${r.next_if_minor} (minor) / ${r.next_if_major} (major)`) : '—') }] }));
     };
     [sel, co].forEach((n) => n.addEventListener('input', paint));
+    search.addEventListener('input',()=>{S.search=search.value;paint();});
     paint();
-    return el('div', { class: 'stack' }, el('div', { class: 'toolbar' }, sel, co), holder);
+    return el('div', { class: 'stack offense-register' },el('div',{class:'offense-filter-panel'},el('div',{class:'offense-filter-title'},el('div',{},el('h3',{},'Technician monitoring'),el('p',{class:'muted small'},'Find restrictions, offense levels and deployment eligibility.')),resultCount),el('div',{class:'offense-filter-grid'},search,sel,co)), holder);
   }
 
   function approvals() {
     const sel = el('select', { class: 'input', 'aria-label': 'Approval status' },
       [['proposed', 'Awaiting approval'], ['approved', 'Approved'], ['rejected', 'Rejected'], ['', 'All']].map(([v, t]) => el('option', { value: v }, t)));
     sel.value = S.astatus;
-    const holder = el('div', { class: 'card card--flush' });
+    const holder = el('div', { class: 'card card--flush offense-table offense-approvals-table' });
     const paint = () => {
       S.astatus = sel.value;
       const rows = D.ac.filter((r) => !S.astatus || r.status === S.astatus);
@@ -124,7 +129,7 @@ export async function render(root, ctx) {
     };
     sel.addEventListener('input', paint);
     paint();
-    return el('div', { class: 'stack' }, el('div', { class: 'toolbar' }, sel), holder);
+    return el('div', { class: 'stack offense-register' }, el('div',{class:'offense-filter-panel'},el('div',{class:'offense-filter-title'},el('div',{},el('h3',{},'Restriction approvals'),el('p',{class:'muted small'},'Review proposed actions and record approval decisions.'))),el('div',{class:'offense-filter-grid'},sel)), holder);
   }
 
   function draw() {
@@ -133,13 +138,13 @@ export async function render(root, ctx) {
       ['Under monitoring', n((r) => r.monitoring_status === 'UNDER MONITORING')], ['Banned', n((r) => r.monitoring_status === 'BANNED')],
       ['On hold', n((r) => r.hold_until)], ['Awaiting approval', D.ac.filter((a) => a.status === 'proposed').length],
       ['Needs review', n((r) => r.requires_review)],
-    ].map(([t, v]) => el('div', { class: 'card' }, el('div', { class: 'card__title' }, t), el('div', { class: 'stat' }, v))));
+    ].map(([t, v],i) => el('div', { class: 'offense-stat-card offense-stat-card--'+i },el('div',{class:'offense-stat-label'},t),el('div',{class:'offense-stat-value'},v),el('div',{class:'offense-stat-footer'},i===3?'Pending decision':'Current overview'))));
     tabs.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.id === S.tab)));
     body.replaceChildren(S.tab === 'monitoring' ? monitoring() : approvals());
   }
 
-  const stats = el('div', { class: 'grid grid--cards', style: 'margin-bottom:16px' });
-  const tabs = el('div', { class: 'tabs', role: 'tablist' }, [['monitoring', 'Monitoring'], ['approvals', 'Approvals']].map(([id, label]) =>
+  const stats = el('div', { class: 'offense-stats' });
+  const tabs = el('div', { class: 'tabs offense-tabs', role: 'tablist' }, [['monitoring', 'Monitoring'], ['approvals', 'Approvals']].map(([id, label]) =>
     el('button', { class: 'tab', type: 'button', role: 'tab', dataset: { id }, onclick: () => { S.tab = id; draw(); } }, label)));
 
   try { await load(); } catch (e) {
@@ -147,10 +152,12 @@ export async function render(root, ctx) {
     root.append(el('div', { class: 'alert alert--error' }, friendlyError(e)));
     return;
   }
+  root.classList.add('offense-workspace');
   root.append(
-    el('div', { class: 'page-head' }, el('div', {}, el('h2', {}, 'Offense Monitoring'),
-      el('p', { class: 'muted small' }, 'Holds and bans take effect only after a supervisor or admin approves them.')),
-      ctx.can('offenses:recalc') ? el('button', { class: 'btn', type: 'button', onclick: recalc }, 'Recalculate') : null),
-    stats, tabs, body);
+    el('section',{class:'offense-hero'},el('div',{},el('span',{class:'offense-hero__eyebrow'},'AHBA DEVELOPMENT / QUALITY & COMPLIANCE'),el('h2',{},'Offense monitoring'),el('p',{},'Track offense progression, restrictions and approval decisions in one place.'),el('span',{class:'offense-hero__notice'},'Restrictions take effect only after authorized approval.')),
+      ctx.can('offenses:recalc') ? el('button', { class: 'offense-recalc', type: 'button', onclick: recalc }, '↻  Recalculate offenses') : null),
+    el('div',{class:'offense-section-heading'},el('span',{},'LIVE OVERVIEW'),el('h3',{},'Monitoring at a glance')),
+    stats,
+    el('div',{class:'offense-tabs-header'},el('div',{},el('span',{},'WORKSPACE'),el('h3',{},'Case management')),tabs),body);
   draw();
 }
