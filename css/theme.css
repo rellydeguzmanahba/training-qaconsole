@@ -171,3 +171,39 @@ body.sidebar-collapsed #app .nav__group { display: none; }
   #app .table--stack td { padding: 5px 0; }
   #app .view { padding-bottom: 80px; }
 }
+
+
+/* Settings: wrap navigation instead of clipping the last tab. */
+#app .view:has(.settings-tabs){min-width:0}
+#app .settings-tabs{display:flex;flex-wrap:wrap;gap:7px;width:100%;max-width:100%;overflow:visible;padding:8px;background:rgba(255,255,255,.72);border:1px solid #dce7de;border-radius:16px;box-sizing:border-box}
+#app .settings-tabs .tab{flex:0 1 auto;white-space:normal;text-align:center;min-height:40px;line-height:1.25;padding:9px 13px}
+@media(max-width:640px){#app .settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}#app .settings-tabs .tab{width:100%;padding:10px 6px;font-size:.78rem}}
+
+/* QA violations: clear filters, compact overview, legible table. */
+#app .qa-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 18px}
+#app .qa-summary__card{background:#fff;border:1px solid #dce7df;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;box-shadow:0 4px 16px rgba(15,50,35,.035)}
+#app .qa-summary__card span{color:#60786b;font-size:.8rem}
+#app .qa-summary__card strong{font-size:1.65rem;color:#0d5c42;font-weight:750;line-height:1.1}
+#app .qa-filters{display:grid;grid-template-columns:minmax(200px,2fr) repeat(4,minmax(125px,1fr));gap:10px;align-items:center;padding:16px;border-radius:16px;background:#fff;border:1px solid #e0e8e2}
+#app .qa-filters>*{min-width:0;max-width:100%;width:100%}
+#app .qa-filters label.row{display:flex;gap:6px;align-items:center;white-space:nowrap}
+#app .qa-filters label.row input{min-width:0;flex:1;width:100%}
+#app .qa-preview-hint{margin:8px 0 12px}
+#app .qa-violations-table{border-radius:16px;overflow:hidden}
+#app .qa-violations-table .table td{vertical-align:middle}
+#app .qa-violations-table .table tbody tr:hover{background:#f3f9f5}
+.qa-tech-preview__popup{position:fixed!important;z-index:9999!important;display:none;max-height:min(380px,60vh);overflow-y:auto;box-sizing:border-box}
+.qa-tech-preview.is-open .qa-tech-preview__trigger{background:#d7eadf;border-color:#32885e}
+body>.qa-tech-preview__popup{display:block;box-shadow:0 18px 60px rgba(5,34,23,.24)}
+@media(max-width:1000px){#app .qa-filters{grid-template-columns:repeat(3,minmax(0,1fr))}#app .qa-filters>input[type=search]{grid-column:1/-1}}
+@media(max-width:640px){#app .qa-summary{gap:7px}#app .qa-summary__card{padding:12px 9px}#app .qa-summary__card strong{font-size:1.3rem}#app .qa-summary__card span{font-size:.69rem}#app .qa-filters{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px;gap:8px}#app .qa-filters>input[type=search]{grid-column:1/-1}#app .qa-filters label.row{flex-wrap:wrap}#app .qa-filters label.row input{flex-basis:100%}}
+
+/* Sidebar clock: restrained green/gold card with readable date and seconds. */
+#app .sidebar__clock{flex:none;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin:10px 12px 8px;padding:15px 8px 13px;border-radius:15px;background:linear-gradient(145deg,#123e32,#0b2f27);border:1px solid rgba(218,185,109,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.07);text-align:center;min-width:0}
+#app .sidebar__clock:before{content:'PHILIPPINE STANDARD TIME';color:#aacdbb;font-size:.56rem;font-weight:750;letter-spacing:.14em;line-height:1.4}
+#app .sidebar__clock-time{color:#f4d28c;font-size:clamp(1rem,1.6vw,1.38rem);font-weight:800;letter-spacing:-.025em;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
+#app .sidebar__clock-date{color:#c5dcd0;font-size:.73rem;line-height:1.4}
+body.sidebar-collapsed #app .sidebar__clock{margin:8px 5px;padding:10px 2px;gap:3px}
+body.sidebar-collapsed #app .sidebar__clock:before,body.sidebar-collapsed #app .sidebar__clock-date{display:none}
+body.sidebar-collapsed #app .sidebar__clock-time{font-size:.67rem;letter-spacing:-.04em;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:900px){body.sidebar-collapsed #app .sidebar__clock{margin:10px 12px;padding:15px 8px}body.sidebar-collapsed #app .sidebar__clock:before,body.sidebar-collapsed #app .sidebar__clock-date{display:block}body.sidebar-collapsed #app .sidebar__clock-time{font-size:1.2rem;white-space:nowrap}}
