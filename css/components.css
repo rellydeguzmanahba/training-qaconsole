@@ -110,3 +110,6 @@ dialog.modal--wide{max-width:min(760px,calc(100vw - 32px))}
 .qa-tech-preview__penalty{background:#f5f8f5;border-radius:8px;padding:8px;font-size:.82rem;white-space:pre-wrap}
 .qa-tech-preview__penalty strong{display:block;margin-bottom:5px;color:#155c43}
 @media(max-width:640px){.qa-tech-preview__popup{position:fixed;left:12px;right:12px;top:20vh;width:auto;max-height:60vh;z-index:75}.qa-tech-preview__trigger{width:32px;height:32px}}
+
+/* Allow violation previews to extend beyond the table viewport. */
+.table-wrap:has(.qa-tech-preview){overflow:visible}
