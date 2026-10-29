@@ -16,6 +16,7 @@ function loadQr() {
 }
 export async function renderAttendanceAdmin(root,ctx) {
  const body=el('div',{class:'stack'});root.append(body);
+ let showArchived=false;
  async function draw(){
   const [sessions,types,techs]=await Promise.all([
    ctx.sb.rpc('attendance_admin_sessions'),
@@ -44,7 +45,7 @@ export async function renderAttendanceAdmin(root,ctx) {
     form.hidden=!form.hidden;toggle.textContent=form.hidden?'+ New Training Session':'Close Session Form';
   }},'+ New Training Session');
   form.hidden=true;
-  const cards=sessions.data||[];
+  const cards=(sessions.data||[]).filter(x=>!x.archived_at);
   const now=Date.now();
   const live=cards.filter(x=>new Date(x.starts_at).getTime()<=now&&new Date(x.ends_at).getTime()>=now).length;
   const totalPending=cards.reduce((sum,x)=>sum+Math.max(0,Number(x.participants)-Number(x.checked_in)),0);
@@ -56,8 +57,9 @@ export async function renderAttendanceAdmin(root,ctx) {
       el('div',{class:'card attendance-stat'},el('strong',{},String(live)),el('span',{},'In progress')),
       el('div',{class:'card attendance-stat'},el('strong',{},String(totalPending)),el('span',{},'Not yet checked in'))),
     el('section',{class:'card portal-card attendance-create'},form),
-    el('h3',{},'Training Sessions'));
-  for(const s of sessions.data||[]){
+    el('div',{class:'attendance-list-heading'},el('h3',{},showArchived?'Archived Training Sessions':'Training Sessions'),
+      el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{showArchived=!showArchived;await draw();}},showArchived?'Show Active Sessions':'View Archived Sessions')));
+  for(const s of (sessions.data||[]).filter(x=>showArchived?!!x.archived_at:!x.archived_at)){
    const employee=el('select',{class:'input','aria-label':'Assign employee'},(techs.data||[]).map(t=>el('option',{value:t.id},t.first_name+' '+t.surname)));
    const assign=el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{
     const {error}=await ctx.sb.rpc('attendance_assign',{p_session_id:s.id,p_technician_id:employee.value});
@@ -128,20 +130,26 @@ export async function renderAttendanceAdmin(root,ctx) {
    actions.append(el('button',{class:'btn btn--sm',type:'button',onclick:()=>{
      editor.hidden=!editor.hidden;
    }},'Edit Session'));
+   actions.append(el('button',{class:'btn btn--sm',type:'button',onclick:async()=>{
+     const archive=!s.archived_at;
+     if(archive&&!window.confirm('Archive "'+s.title+'"? Attendance records will be preserved.'))return;
+     const {error}=await ctx.sb.rpc('attendance_set_archived',{p_session_id:s.id,p_archived:archive});
+     if(error)return ctx.toast(friendlyError(error),'error');
+     ctx.toast(archive?'Session archived.':'Session restored.','success');await draw();
+   }},s.archived_at?'Restore Session':'Archive Session'));
    if(ctx.role==='admin')actions.append(el('button',{class:'btn btn--sm btn--danger',type:'button',onclick:async()=>{
-     if(Number(s.participants)>0)return ctx.toast('Cannot delete: employees are assigned. Attendance records must be preserved.','error');
-     const ok=await ctx.confirm({title:'Delete this training session?',message:'This permanently deletes "'+s.title+'". Only sessions with no assigned employees can be deleted.',confirmText:'Delete Session',danger:true});
-     if(!ok)return;
+     const warning='PERMANENT DELETE: "'+s.title+'" has '+s.participants+' assigned employees and '+s.checked_in+' check-ins. This permanently removes the session, employee assignments, and attendance timestamps. This cannot be undone. Type DELETE to confirm.';
+     if(window.prompt(warning)!=='DELETE')return;
      const {error}=await ctx.sb.rpc('attendance_delete_session',{p_session_id:s.id});
      if(error)return ctx.toast(friendlyError(error),'error');
-     ctx.toast('Session deleted.','success');await draw();
-   }},'Delete Session'));
+     ctx.toast('Session permanently deleted.','success');await draw();
+   }},'Permanently Delete'));
    body.append(el('section',{class:'card portal-card attendance-session-card'},el('h3',{},s.title),
     el('p',{class:'small muted'},dateLocal(s.starts_at)+' – '+dateLocal(s.ends_at)+' · '+(s.venue||'No venue')),
     el('p',{class:'small'},s.checked_in+' checked in / '+s.participants+' assigned'),
     actions,editor,el('div',{class:'row'},employee,assign,qrButton,copy,reviews),qrHost,reviewHost));
   }
-  if(!(sessions.data||[]).length)body.append(el('div',{class:'card portal-card'},'No sessions yet. Click + New Training Session to get started.'));
+  if(!(sessions.data||[]).some(x=>showArchived?!!x.archived_at:!x.archived_at))body.append(el('div',{class:'card portal-card'},showArchived?'No archived sessions.':'No active sessions. Click + New Training Session to get started.'));
  }
  await draw();
 }
