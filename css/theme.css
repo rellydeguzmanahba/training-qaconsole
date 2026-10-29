@@ -220,3 +220,5 @@ body.sidebar-collapsed #app .sidebar__clock-time{font-size:.67rem;letter-spacing
 #app .qa-policy-entry strong{color:#0d6546}
 #app .qa-policy-detail{gap:12px}
 @media(max-width:640px){#app .qa-policy-head{padding:15px}#app .qa-policy-toolbar .input{min-width:0;width:100%}}
+
+#app .sidebar__build{color:#aac4b7;font-size:.62rem;text-align:center;letter-spacing:.045em;margin:4px 8px 0;padding:4px 0}body.sidebar-collapsed #app .sidebar__build{font-size:0}body.sidebar-collapsed #app .sidebar__build:after{content:'v2';font-size:.63rem}
