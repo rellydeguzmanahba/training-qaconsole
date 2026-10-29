@@ -67,8 +67,8 @@ export function createPenaltyImporter(ctx,refresh){
      if(issues.length)view.append(el('div',{class:'alert alert--error'},issues.slice(0,10).join('; ')));
      const table=el('div',{class:'qa-import-preview-table'});
      const t=el('table',{class:'table'});
-     t.append(el('thead',{},el('tr',{},['Code','Violation','Description','Penalty'].map(x=>el('th',{},x)))));
-     t.append(el('tbody',{},records.slice(0,8).map(r=>el('tr',{},[r.violation_code,r.violation_type,r.description,r.penalty_text].map(x=>el('td',{},x)))));
+     const headRow=el('tr'); for(const label of ['Code','Violation','Description','Penalty']) headRow.append(el('th',{},label)); t.append(el('thead',{},headRow));
+     const body=el('tbody'); for(const record of records.slice(0,8)){const tr=el('tr');for(const value of [record.violation_code,record.violation_type,record.description,record.penalty_text])tr.append(el('td',{},value));body.append(tr);}t.append(body);
      table.append(t);view.append(table);
      const mode=selector('Import mode', [['merge','Add new / update matching codes'],['replace','Replace the entire reference catalog']], 'merge',()=>{});
      const btn=el('button',{class:'btn btn--primary',type:'button'},'Import '+records.length+' entries');
