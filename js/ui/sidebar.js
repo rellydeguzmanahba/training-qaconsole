@@ -13,7 +13,7 @@ export function initSidebar(role) {
   ensureCss('css/command-center.css');            // design system (scoped to the signed-in app)
   installTabKeys();
   document.body.classList.toggle('role-technician', role === 'technician');
-  ensureCss('css/portal.css'); // Attendance workspace styles are needed for admin and trainer too.
+  ensureCss('css/portal.css');\n  ensureCss('css/mobile.css?v=20261029m'); // Attendance workspace styles are needed for admin and trainer too.
   const app = document.getElementById('app');
   const nav = document.getElementById('nav');
   nav.replaceChildren();
