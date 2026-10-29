@@ -217,8 +217,13 @@ async function renderPenaltyStructure(host,ctx){
   el('div',{class:'toolbar qa-policy-toolbar'},q,count),
   el('div',{class:'card card--flush qa-policy-table'},table),
   !rows.length?el('div',{class:'alert alert--info'},'No penalty entries loaded yet. Admins can import the Excel workbook below.'):null);
- if(ctx.profile?.role==='admin'){
-   const {createPenaltyImporter}=await import('./penalty-importer.js');
-   host.append(createPenaltyImporter(ctx,async()=>{const h=el('div');await renderPenaltyStructure(h,ctx);host.replaceChildren(...h.childNodes);}));
+ if(ctx.role==='admin'){
+   try {
+     const {createPenaltyImporter}=await import('./penalty-importer.js');
+     host.append(createPenaltyImporter(ctx,async()=>{const h=el('div');await renderPenaltyStructure(h,ctx);host.replaceChildren(...h.childNodes);}));
+   } catch(importError) {
+     console.error('Penalty workbook importer failed to load',importError);
+     host.append(el('div',{class:'alert alert--error'},'Excel importer could not load: '+friendlyError(importError)+'. Reload the page after the latest GitHub Pages deployment.'));
+   }
  }
 }
