@@ -34,7 +34,7 @@ const TABS = [...Object.entries(LOOKUPS).map(([k, v]) => ({ id: k, label: v.labe
 
 export async function render(root, ctx) {
   const content = el('div');
-  const tabs = el('div', { class: 'tabs', role: 'tablist' });
+  const tabs = el('div', { class: 'tabs settings-tabs', role: 'tablist', 'aria-label': 'Settings sections' });
   const show = async (id) => {
     tabs.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.id === id)));
     content.replaceChildren(el('div', { class: 'skeleton' }));
