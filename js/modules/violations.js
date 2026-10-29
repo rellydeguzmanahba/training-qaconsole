@@ -75,7 +75,8 @@ export async function render(root, ctx) {
     popup.addEventListener('mouseleave',(e)=>{if(!wrap.contains(e.relatedTarget)&&matchMedia('(hover:hover)').matches)close();});
     popup.addEventListener('keydown',e=>{if(e.key==='Escape'){close();trigger.focus();}});
     document.addEventListener('click',e=>{if(!wrap.contains(e.target)&&!popup.contains(e.target)&&wrap.classList.contains('is-open'))close();},{signal:ctx.signal||undefined});
-    wrap.append(link,trigger);
+    const initials=r.tech.split(/\s+/).slice(0,2).map(n=>n[0]||'').join('').toUpperCase();
+    wrap.append(el('span',{class:'qa-person-avatar','aria-hidden':'true'},initials),el('span',{class:'qa-person-name'},link,el('small',{},'Technician')),trigger);
     return wrap;
   };
   const sel = (label, opts) => el('select', { class: 'input', 'aria-label': label },
@@ -101,13 +102,13 @@ export async function render(root, ctx) {
   quickAll.onclick=()=>quick(quickAll);quickOpen.onclick=()=>quick(quickOpen,'Open');quickClosed.onclick=()=>quick(quickClosed,'Closed');quickMajor.onclick=()=>quick(quickMajor,'','Major');
   const table = dataTable({ pageSize: 25, rows, initialSort: { key: 'violation_date', dir: 'desc' }, empty: 'No violations match your filters.',
     columns: [
-      { key: 'violation_date', label: 'Date', render: (r) => el('a', { href: `#/violations/${r.id}` }, fmtDate(r.violation_date)) },
+      { key: 'violation_date', label: 'Reported', render: (r) => el('div',{class:'qa-date-cell'},el('a', { href: `#/violations/${r.id}` }, fmtDate(r.violation_date)),el('small',{},'Case #'+String(r.id).slice(0,8))) },
       { key: 'tech', label: 'Technician', render: techPreview },
-      { key: 'codes', label: 'Violation code', render:(r)=>el('span',{class:'qa-code'},r.codes||'Uncategorized') },
+      { key: 'codes', label: 'Classification', render:(r)=>el('div',{class:'qa-classification'},el('span',{class:'qa-code'},r.codes||'Uncategorized'),el('small',{},r.retraining_required?'Counts toward offense':'Non-counting')) },
       { key: 'severity', label: 'Severity', render: (r) => badge(r.severity, SEVERITY_VARIANT[r.severity]) },
       { key: 'status', label: 'Status', render: (r) => badge(r.status, VIOLATION_STATUS_VARIANT[r.status]) },
-      { key: 'evidence', label: 'Files', render: (r) => (r.evidence ? badge(String(r.evidence), 'green') : el('span',{class:'muted small'},'—')) },
-      { key: 'action', label: '', nosort:true, render:(r)=>el('a',{href:`#/violations/${r.id}`,class:'qa-view-case'},'View case →') }] });
+      { key: 'evidence', label: 'Evidence', render: (r) => el('span',{class:'qa-evidence'},r.evidence?'▣  '+r.evidence+' file'+(r.evidence===1?'':'s'):'No files') },
+      { key: 'action', label: 'Details', nosort:true, render:(r)=>el('a',{href:`#/violations/${r.id}`,class:'qa-view-case'},'View case →') }] });
 
   const apply = () => {
     const t = q.value.trim().toLowerCase();
