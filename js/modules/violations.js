@@ -88,7 +88,9 @@ export async function render(root, ctx) {
   const fCount = sel('Offense impact', [['yes', 'Counts as offense'], ['no', 'Does not count']]);
   const from = el('input', { class: 'input', type: 'date', 'aria-label': 'From date' });
   const to = el('input', { class: 'input', type: 'date', 'aria-label': 'To date' });
-  const count = el('span', { class: 'muted small' });
+  const count = el('span', { class: 'muted small qa-results-count' });
+  const clear=el('button',{class:'btn btn--sm qa-clear-filters',type:'button',onclick:()=>{q.value='';for(const x of [fStatus,fSev,fCat,fCo,fCount,from,to])x.value='';apply();}},'Clear filters');
+  const activeFilters=el('span',{class:'qa-active-filters small muted'},'All records');
 
   const table = dataTable({ pageSize: 25, rows, initialSort: { key: 'violation_date', dir: 'desc' }, empty: 'No violations match your filters.',
     columns: [
@@ -110,7 +112,10 @@ export async function render(root, ctx) {
       (!fCount.value || (fCount.value === 'yes') === r.retraining_required) &&
       (!from.value || r.violation_date >= from.value) && (!to.value || r.violation_date <= to.value));
     table.setRows(list);
-    count.textContent = `${list.length} of ${rows.length}`;
+    count.textContent = `${list.length} of ${rows.length} records`;
+    const active=[fStatus,fSev,fCat,fCo,fCount,from,to].filter(x=>!!x.value).length+(t?1:0);
+    activeFilters.textContent=active?active+' active filter'+(active===1?'':'s'):'All records';
+    clear.hidden=!active;
   };
   [q, fStatus, fSev, fCat, fCo, fCount, from, to].forEach((n) => n.addEventListener('input', apply));
 
@@ -121,17 +126,19 @@ export async function render(root, ctx) {
     } catch (e) { ctx.toast(friendlyError(e), 'error'); }
   };
 
-  const summary=el('div',{class:'qa-summary'},
+  const summary=el('div',{class:'qa-summary qa-summary--premium'},
     el('div',{class:'qa-summary__card'},el('span',{},'Total records'),el('strong',{},String(rows.length))),
     el('div',{class:'qa-summary__card'},el('span',{},'Open cases'),el('strong',{},String(rows.filter(r=>String(r.status).toLowerCase()==='open').length))),
     el('div',{class:'qa-summary__card'},el('span',{},'Technicians'),el('strong',{},String(byTech.size))));
   root.append(
-    el('div', { class: 'page-head' }, el('div', {}, el('h2', {}, 'QA Violations'), count),
+    el('div', { class: 'page-head qa-page-head' }, el('div', {},el('span',{class:'qa-eyebrow'},'QUALITY ASSURANCE / CASE MANAGEMENT'), el('h2', {}, 'QA Violations'),el('p',{class:'muted small'},'Review cases, monitor outcomes, and access technician violation history.')),
       ctx.can('violations:write') ? el('button', { class: 'btn btn--primary', type: 'button', onclick: add }, 'Record violation') : null),
     summary,
-    el('div', { class: 'toolbar qa-filters' }, q, fStatus, fSev, fCat, fCo, fCount,
-      el('label', { class: 'row small' }, 'From', from), el('label', { class: 'row small' }, 'To', to)),
-    el('p',{class:'muted small qa-preview-hint'},'Hover over a technician name or tap ⓘ to review recorded violations and policy penalty references.'),
+    el('section',{class:'qa-filter-panel'},
+      el('div',{class:'qa-filter-panel__head'},el('div',{},el('h3',{},'Find a violation'),el('p',{class:'muted small'},'Search and refine the case register.')),clear),
+      el('div', { class: 'toolbar qa-filters' }, q, fStatus, fSev, fCat, fCo, fCount,
+        el('label', { class: 'row small' }, 'From', from), el('label', { class: 'row small' }, 'To', to))),
+    el('div',{class:'qa-list-heading'},el('div',{},el('h3',{},'Violation register'),el('span',{class:'muted small'},'Select a date to open the case · Tap ⓘ for technician history')),el('div',{class:'qa-list-heading__meta'},activeFilters,count)),
     el('div', { class: 'card card--flush qa-violations-table' }, table));
   apply();
 }
