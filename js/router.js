@@ -47,7 +47,7 @@ async function go(ctx) {
   try {
     let mod;
     try {
-      mod = await import(`./modules/${route.module}.js`);
+      mod = await import(route.module === 'violations' ? './modules/violations.js?v=20261029i' : `./modules/${route.module}.js`);
     } catch (e) {
       console.error(`Module "${route.module}" failed to load`, e);
       if (my === token) view.replaceChildren(notice(route.title, `This module is not available yet (planned for Phase ${route.phase}).`));
