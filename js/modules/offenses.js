@@ -104,9 +104,11 @@ export async function render(root, ctx) {
       [['proposed', 'Awaiting approval'], ['approved', 'Approved'], ['rejected', 'Rejected'], ['', 'All']].map(([v, t]) => el('option', { value: v }, t)));
     sel.value = S.astatus;
     const holder = el('div', { class: 'card card--flush offense-table offense-approvals-table' });
+    const resultCount=el('span',{class:'offense-result-count'});
     const paint = () => {
       S.astatus = sel.value;
       const rows = D.ac.filter((r) => !S.astatus || r.status === S.astatus);
+      resultCount.textContent=`${rows.length} decision${rows.length===1?'':'s'}`;
       holder.replaceChildren(dataTable({ rows, pageSize: 25, initialSort: { key: 'offense_date', dir: 'desc' }, empty: 'Nothing here.',
         columns: [
           { key: 'offense_date', label: 'Offense date', render: (r) => el('a', { href: `#/violations/${r.violation_id}` }, fmtDate(r.offense_date)) },
@@ -129,7 +131,7 @@ export async function render(root, ctx) {
     };
     sel.addEventListener('input', paint);
     paint();
-    return el('div', { class: 'stack offense-register' }, el('div',{class:'offense-filter-panel'},el('div',{class:'offense-filter-title'},el('div',{},el('h3',{},'Restriction approvals'),el('p',{class:'muted small'},'Review proposed actions and record approval decisions.'))),el('div',{class:'offense-filter-grid'},sel)), holder);
+    return el('div', { class: 'stack offense-register' }, el('div',{class:'offense-filter-panel'},el('div',{class:'offense-filter-title'},el('div',{},el('h3',{},'Restriction approvals'),el('p',{class:'muted small'},'Review proposed actions and record approval decisions.')),resultCount),el('div',{class:'offense-filter-grid'},sel)), holder);
   }
 
   function draw() {
