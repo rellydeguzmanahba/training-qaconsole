@@ -207,3 +207,16 @@ body.sidebar-collapsed #app .sidebar__clock{margin:8px 5px;padding:10px 2px;gap:
 body.sidebar-collapsed #app .sidebar__clock:before,body.sidebar-collapsed #app .sidebar__clock-date{display:none}
 body.sidebar-collapsed #app .sidebar__clock-time{font-size:.67rem;letter-spacing:-.04em;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:900px){body.sidebar-collapsed #app .sidebar__clock{margin:10px 12px;padding:15px 8px}body.sidebar-collapsed #app .sidebar__clock:before,body.sidebar-collapsed #app .sidebar__clock-date{display:block}body.sidebar-collapsed #app .sidebar__clock-time{font-size:1.2rem;white-space:nowrap}}
+
+/* Structured penalty policy catalog */
+#app .qa-policy-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 20px;margin:10px 0 14px;border-radius:16px;background:linear-gradient(110deg,#103b30,#14654b);color:#fff}
+#app .qa-policy-head h3{color:#fff;font-size:1.3rem;margin:0 0 5px}
+#app .qa-policy-head .muted{color:#dceee3}
+#app .qa-policy-toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:15px 0}
+#app .qa-policy-toolbar .input{flex:1;min-width:200px}
+#app .qa-policy-table{overflow:hidden;border-radius:14px}
+#app .qa-policy-text{white-space:pre-line;line-height:1.65;color:#234a3c;font-size:.85rem;min-width:160px}
+#app .qa-policy-entry{border:1px solid #dce7df;border-radius:12px;background:#f7faf7;padding:14px}
+#app .qa-policy-entry strong{color:#0d6546}
+#app .qa-policy-detail{gap:12px}
+@media(max-width:640px){#app .qa-policy-head{padding:15px}#app .qa-policy-toolbar .input{min-width:0;width:100%}}
