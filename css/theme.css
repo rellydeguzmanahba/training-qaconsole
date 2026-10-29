@@ -222,3 +222,14 @@ body.sidebar-collapsed #app .sidebar__clock-time{font-size:.67rem;letter-spacing
 @media(max-width:640px){#app .qa-policy-head{padding:15px}#app .qa-policy-toolbar .input{min-width:0;width:100%}}
 
 #app .sidebar__build{color:#aac4b7;font-size:.62rem;text-align:center;letter-spacing:.045em;margin:4px 8px 0;padding:4px 0}body.sidebar-collapsed #app .sidebar__build{font-size:0}body.sidebar-collapsed #app .sidebar__build:after{content:'v2';font-size:.63rem}
+
+#app .qa-import-card{margin-top:22px;padding:20px;border:1px solid #d5e5d9;border-radius:16px;background:#f9fcfa}
+#app .qa-import-card h3{color:#14563c;margin:0 0 8px}
+#app .qa-import-card>input[type=file]{display:block;width:100%;margin:12px 0;padding:12px;border:1px dashed #86b59c;border-radius:10px;background:#fff}
+#app .qa-import-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+#app .qa-import-field{display:flex;flex-direction:column;gap:6px;font-size:.82rem;color:#365a48;font-weight:600}
+#app .qa-import-field select{width:100%;min-width:0}
+#app .qa-import-preview-table{overflow:auto;max-height:380px;border:1px solid #d9e8dc;border-radius:12px}
+#app .qa-import-preview-table table{min-width:680px}
+#app .qa-import-preview-table td{white-space:pre-line;max-width:340px;vertical-align:top}
+@media(max-width:640px){#app .qa-import-fields{grid-template-columns:1fr}#app .qa-import-card{padding:14px}}
