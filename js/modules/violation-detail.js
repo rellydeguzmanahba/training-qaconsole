@@ -113,6 +113,28 @@ export async function renderDetail(root, ctx, id) {
       ['Same-day violations', hist.violations_count > 1 ? `${hist.violations_count} counted as one offense` : '1']])
     : el('p', { class: 'muted' }, v.retraining_required ? 'No offense calculated yet.' : 'This violation does not count toward offense levels.')));
 
+  // Workbook policy reference is informational and independent of the offense engine.
+  const policyCodes=v.violation_category_links.map(l=>l.violation_categories?.code).filter(Boolean);
+  const policyResponse=await sb.from('qa_penalty_reference')
+    .select('violation_code,violation_type,description,penalty_text').limit(1000);
+  const policyRows=policyResponse.error?[]:(policyResponse.data||[]);
+  const codeKey=x=>String(x||'').toUpperCase().replace(/\\s+/g,'');
+  const policyBody=el('div',{class:'stack qa-policy-detail',style:'padding:18px'},
+    el('p',{class:'muted small'},'Reference: PPM-OPG-PRP-008 V1.0. This does not replace approved AHBA offense actions or automatically impose a penalty.'));
+  if(policyResponse.error)policyBody.append(el('div',{class:'alert alert--info'},'Penalty structure not available. Confirm migration 018 and the workbook seed import.'));
+  else if(!policyRows.length)policyBody.append(el('div',{class:'alert alert--info'},'Penalty structure has no imported entries. Import the penalty seed SQL.'));
+  for(const code of policyCodes){
+    const matches=policyRows.filter(p=>codeKey(p.violation_code)===codeKey(code));
+    if(!matches.length)policyBody.append(el('div',{class:'qa-policy-entry'},
+      el('strong',{},code),el('p',{class:'muted small'},'No exact matching policy code. This QA code requires an approved mapping before any equivalent penalty can be shown.')));
+    for(const p of matches)policyBody.append(el('div',{class:'qa-policy-entry'},
+      el('strong',{},p.violation_code+' · '+p.violation_type),
+      el('p',{class:'small'},p.description||''),
+      el('div',{class:'qa-policy-text'},p.penalty_text)));
+  }
+  policyBody.append(el('a',{href:'#/settings',class:'small'},'Browse penalty structure in Settings →'));
+  const policySection=section('Structured penalty reference',policyBody);
+
   const evidence = section(`Evidence (${v.violation_evidence.length})`, dataTable({ rows: v.violation_evidence, pageSize: 10, empty: 'No evidence attached.',
     columns: [{ key: 'file_name', label: 'Item', render: (e) => el('span', {}, e.file_name || 'File', ' ', badge(e.external_url ? 'Link' : 'File')) },
       { key: 'by', label: 'Added by', sort: (e) => people.get(e.uploaded_by) ?? '', render: (e) => people.get(e.uploaded_by) ?? '—' },
@@ -140,5 +162,5 @@ export async function renderDetail(root, ctx, id) {
       el('div', { class: 'page-head' }, el('div', {}, el('h2', {}, `Violation – ${techName}`),
         el('p', { class: 'muted' }, fmtDate(v.violation_date))),
         ctx.role === 'admin' ? el('button', { class: 'btn btn--sm', type: 'button', onclick: del }, 'Delete') : null)),
-    info, impact, el('div', { class: 'grid grid--2' }, evidence, retr));
+    info, impact, policySection, el('div', { class: 'grid grid--2' }, evidence, retr));
 }
