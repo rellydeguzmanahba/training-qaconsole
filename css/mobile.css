@@ -1,0 +1,82 @@
+/* AHBA mobile-first fixes — all signed-in pages. */
+@media(max-width:900px){
+ html,body{width:100%;max-width:100%;overflow-x:hidden}
+ #app,#app .app-shell,#app .main,#app .view{min-width:0;max-width:100%}
+ #app .view{width:100%;padding:15px 12px 40px}
+ #app .topbar{min-height:56px;padding:0 12px;gap:8px}
+ #app .topbar__title{font-size:1rem!important;min-width:0}
+ #app .topbar__right{gap:6px}
+ #app .topbar__right .badge{padding:5px 8px;font-size:.7rem}
+ #app .stack,#app .card,#app .grid,#app .page-head,#app .toolbar,#app .tabs{min-width:0;max-width:100%}
+ #app .page-head{gap:10px}
+ #app .page-head .btn{max-width:100%}
+ #app .grid--2{grid-template-columns:minmax(0,1fr)}
+ #app .grid--cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #app .toolbar{flex-wrap:wrap}
+ #app .toolbar>.input,#app .toolbar>input,#app .toolbar>select{min-width:0;max-width:100%}
+ #app .tabs{overflow-x:auto;scrollbar-width:thin;overscroll-behavior-x:contain}
+ #app .tabs .tab{flex:none}
+ #app .table-wrap{max-width:100%;overflow-x:auto!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ #app .table{max-width:none}
+ #app .pager{gap:9px;flex-wrap:wrap}
+ #app .pager select{max-width:100%}
+ #app .qa-tech-preview__popup{position:fixed;left:12px;right:12px;top:18vh;width:auto;max-height:65vh}
+ #app .qa-violations-table .table-wrap:has(.qa-tech-preview){overflow-x:auto!important}
+ #app .qa-hero,#app .offense-hero{padding:20px 18px;min-height:0;border-radius:15px}
+ #app .qa-hero h2,#app .offense-hero h2{font-size:1.65rem}
+ #app .qa-hero p,#app .offense-hero p{font-size:.8rem}
+ #app .qa-summary--premium,#app .offense-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #app .qa-command-bar{padding:12px}
+ #app .qa-list-heading,#app .offense-tabs-header{flex-wrap:wrap}
+ #app .offense-filter-grid{grid-template-columns:minmax(0,1fr)}
+ #app .offense-filter-grid .input{width:100%;min-width:0}
+ #app .offense-filter-panel{padding:12px}
+ #app .offense-table .table-wrap{overflow-x:auto!important}
+ #app .offense-table .table{min-width:800px}
+ #app .offense-approvals-table .table{min-width:940px}
+ #app .qa-violations-table .table{min-width:760px}
+ #app .qa-violations-table .table tbody tr{display:table-row}
+ #app .qa-violations-table .table tbody td{display:table-cell;border-left:0;border-right:0}
+ #app .qa-violations-table .table tbody td:first-child{border-radius:12px 0 0 12px;border-left:1px solid #e5ede7}
+ #app .qa-violations-table .table tbody td:last-child{border-radius:0 12px 12px 0;border-right:1px solid #e5ede7}
+ #app .offense-table .table tbody tr{display:table-row}
+ #app .offense-table .table tbody td{display:table-cell}
+ #app .offense-person{min-width:145px}
+ #app .offense-tabs-header{gap:10px}
+ #app .offense-tabs{max-width:100%}
+ #app .offense-hero__notice{line-height:1.45}
+ dialog.modal{max-width:calc(100vw - 20px);max-height:calc(100dvh - 24px);overflow:auto}
+ dialog.modal .modal__body{padding:16px}
+ dialog.modal .modal__actions{padding:12px 16px;flex-wrap:wrap}
+ dialog.modal .modal__actions .btn{flex:1;min-width:110px}
+}
+@media(max-width:520px){
+ #app .view{padding:12px 10px 30px}
+ #app .topbar__title{font-size:.92rem!important}
+ #app .topbar__right .user-name{display:none}
+ #app .qa-hero,#app .offense-hero{padding:18px 16px}
+ #app .qa-hero__action,#app .offense-recalc{width:100%}
+ #app .qa-summary--premium .qa-summary__card{padding:12px 10px}
+ #app .offense-stat-card{min-height:82px;padding:11px}
+ #app .offense-stat-value{font-size:1.55rem}
+ #app .qa-command-bar__top{flex-direction:column;align-items:stretch}
+ #app .qa-command-bar__search{width:100%;flex-basis:auto}
+ #app .qa-advanced-toggle{width:100%}
+ #app .qa-list-heading__meta{white-space:normal}
+ #app .qa-quick-list{gap:6px}
+ #app .qa-quick{font-size:.7rem;padding:8px 10px}
+ #app .qa-advanced-filters .qa-filters{grid-template-columns:minmax(0,1fr)}
+ #app .offense-tabs-header{align-items:stretch}
+ #app .offense-tabs{width:100%}
+ #app .offense-tabs .tab{flex:1;text-align:center}
+ #app .offense-filter-title{align-items:flex-start}
+ #app .offense-filter-grid{gap:8px}
+ #app .offense-hero__eyebrow,#app .qa-hero__eyebrow{font-size:.56rem;letter-spacing:.12em}
+ #app .dash .hero__copy{padding:20px 16px 8px}
+ #app .dash .hero__stage{min-height:170px;height:185px}
+}
+@media(max-width:360px){
+ #app .grid--cards{grid-template-columns:minmax(0,1fr)}
+ #app .qa-summary--premium,#app .offense-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #app .topbar{padding-inline:8px}
+}
