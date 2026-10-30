@@ -77,9 +77,16 @@ Deno.serve(async (request) => {
       signal: AbortSignal.timeout(55000),
     });
     if (!response.ok) {
-      console.error('Gemini generation failed', response.status);
-      return reply(response.status === 429 ? 429 : 502, { error: response.status === 429
-        ? 'Gemini free-tier limit reached. Try again later.' : 'Question generation failed. Check the configured model and API access.' });
+      const failure = await response.json().catch(() => ({}));
+      const apiCode = String(failure?.error?.status || 'UNKNOWN');
+      console.error('Gemini generation failed', response.status, apiCode);
+      const reason = response.status === 400 ? 'Gemini rejected the request format or model settings.'
+        : response.status === 401 || response.status === 403 ? 'Gemini API key is invalid, restricted, or lacks access.'
+        : response.status === 404 ? 'The configured Gemini model was not found or is unavailable to this key.'
+        : response.status === 429 ? 'Gemini free-tier quota or rate limit reached.'
+        : response.status >= 500 ? 'Gemini service is temporarily unavailable.'
+        : 'Gemini rejected the request.';
+      return reply(response.status === 429 ? 429 : 502, { error: `${reason} (Gemini HTTP ${response.status}; ${apiCode}).` });
     }
     const payload = await response.json();
     const raw = payload?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('');
