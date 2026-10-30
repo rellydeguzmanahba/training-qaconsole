@@ -37,7 +37,7 @@ export function renderExamGenerator(root, ctx) {
       } else {
         material.value = content.slice(0, 30000);
         topic.value ||= file.name.replace(/\.(txt|csv)$/i, '').slice(0, 160);
-        importInfo.textContent = 'Text imported into Training content. Generate questions when ready.';
+        importInfo.textContent = 'Document text loaded. Gemini can generate NEW draft questions from it; original questions are not imported as a verified exam.';
       }
     } catch (error) { importInfo.textContent = error instanceof Error ? error.message : 'Could not read file.'; }
     importInput.value = '';
@@ -61,7 +61,7 @@ export function renderExamGenerator(root, ctx) {
     try {
       const url = new URL(formUrl.value.trim());
       if (url.protocol !== 'https:' || !['docs.google.com', 'forms.gle'].includes(url.hostname) ||
-        (url.hostname === 'docs.google.com' && !/^\\/forms\\//.test(url.pathname))) throw new Error();
+        (url.hostname === 'docs.google.com' && !/^\/forms\//.test(url.pathname))) throw new Error();
       let links = [];
       try { links = JSON.parse(localStorage.getItem(formKey) || '[]'); } catch {}
       if (!links.some((item) => item.url === url.href)) links.push({ title: topic.value.trim() || 'Google Forms examination', url: url.href });
@@ -120,7 +120,7 @@ export function renderExamGenerator(root, ctx) {
     el('div', { class: 'card stack exam-workspace__form' },
       el('div', { class: 'exam-workspace__import-panel' },
         el('div', { class: 'exam-workspace__import-choice' }, el('strong', {}, 'Upload an existing exam'), el('p', { class: 'muted small' }, 'PDF · Word · Excel · JSON · TXT · CSV'), importBtn, importInput),
-        el('div', { class: 'exam-workspace__import-choice' }, el('strong', {}, 'Use a Google Form'), el('p', { class: 'muted small' }, 'Keep using an exam you already created.'), formUrl, saveForm, formInfo)), importInfo,
+        el('div', { class: 'exam-workspace__import-choice' }, el('strong', {}, 'Use a Google Form'), el('p', { class: 'muted small' }, 'Save a shortcut to your existing exam (on this browser).'), formUrl, saveForm, formInfo)), importInfo,
       el('div', { class: 'exam-workspace__heading' }, el('div', {}, el('span', { class: 'exam-workspace__eyebrow' }, 'QUESTION BUILDER'), el('h3', {}, 'Generate an assessment'), el('p', { class: 'muted small' }, 'Turn approved training materials into a reviewed question bank.'))),
       el('div', { class: 'exam-workspace__fields' }, el('label', { class: 'stack small' }, 'Training topic', topic), el('label', { class: 'stack small' }, 'Questions (1–30)', count)),
       el('label', { class: 'stack small' }, 'Training content', material),
