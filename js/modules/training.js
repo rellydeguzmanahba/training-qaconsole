@@ -8,7 +8,7 @@ import { fmtDate } from '../utils/dates.js';
 import { openTrainingForm, trainingToast } from './training-form.js';
 
 const ACTIVE = ['Probationary', 'Regular'];
-const TABS = [['overview', 'Completion'], ['matrix', 'Matrix'], ['missing', 'Missing training'], ['records', 'Records'], ['attendance', 'Attendance']];
+const TABS = [['overview', 'Completion'], ['matrix', 'Matrix'], ['missing', 'Missing training'], ['records', 'Records'], ['attendance', 'Attendance'], ['exam-ai', 'AI Exam Generator']];
 const nm = (t) => `${t.first_name} ${t.surname}`;
 
 export async function render(root, ctx) {
@@ -157,6 +157,7 @@ export async function render(root, ctx) {
     tabs.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.id === S.tab)));
     const fn = { overview, matrix, missing, records }[S.tab];
     if (S.tab === 'attendance') { body.replaceChildren(); import('./training-attendance.js').then(m=>m.renderAttendanceAdmin(body,ctx)).catch(e=>ctx.toast(friendlyError(e),'error')); }
+    else if (S.tab === 'exam-ai') { body.replaceChildren(); import('./training-exam-generator.js').then(m=>m.renderExamGenerator(body,ctx)).catch(e=>ctx.toast(friendlyError(e),'error')); }
     else body.replaceChildren(fn());
     scopeSel.hidden = S.tab === 'records';
   }
@@ -167,7 +168,7 @@ export async function render(root, ctx) {
     s.addEventListener('input', () => { S[key] = s.value; draw(); });
     return s;
   };
-  const tabs = el('div', { class: 'tabs', role: 'tablist' }, TABS.map(([id, label]) =>
+  const tabs = el('div', { class: 'tabs', role: 'tablist' }, TABS.filter(([id]) => id !== 'exam-ai' || ['admin', 'trainer'].includes(ctx.role)).map(([id, label]) =>
     el('button', { class: 'tab', type: 'button', role: 'tab', dataset: { id }, onclick: () => { S.tab = id; draw(); } }, label)));
 
   try { await load(); } catch (e) {
