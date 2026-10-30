@@ -6,6 +6,7 @@ export const ROUTES = [
   { path: 'technicians', title: 'Employee Details',      icon: 'users',    module: 'technicians', roles: ALL, group: 'Workforce', phase: 6 },
   { path: 'attendance', title: 'Attendance', icon: 'check', module: 'attendance', roles: ['admin','trainer'], group: 'Workforce', phase: 7 },
   { path: 'training',    title: 'Training',             icon: 'book',     module: 'training',    roles: ALL, group: 'Workforce', phase: 7 },
+  { path: 'exam-generator', title: 'AI Exam Generator', icon: 'book', module: 'exam-generator', roles: ['admin','trainer'], group: 'Workforce', phase: 7 },
   { path: 'violations',  title: 'QA Violations',        icon: 'alert',    module: 'violations',  roles: ALL, group: 'Quality & compliance', phase: 8 },
   { path: 'retraining',  title: 'Retraining',           icon: 'refresh',  module: 'retraining',  roles: ALL, group: 'Quality & compliance', phase: 9 },
   { path: 'offenses',    title: 'Offense Monitoring',   icon: 'shield',   module: 'offenses',    roles: ALL, group: 'Quality & compliance', phase: 10 },
