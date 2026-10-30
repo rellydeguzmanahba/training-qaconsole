@@ -7,17 +7,18 @@ export function renderExamGenerator(root, ctx) {
     root.append(el('div', { class: 'card' }, 'Only trainers and administrators can generate exam questions.'));
     return;
   }
-  const importInput = el('input', { type: 'file', accept: '.json,.txt,.csv,application/json,text/plain,text/csv', style: 'display:none', 'aria-label': 'Upload existing exam' });
-  const importBtn = el('button', { class: 'btn', type: 'button' }, '↑ Upload existing exam');
+  const importInput = el('input', { type: 'file', accept: '.pdf,.docx,.xlsx,.xls,.json,.txt,.csv,application/pdf,application/json,text/plain,text/csv', style: 'display:none', 'aria-label': 'Upload existing exam' });
+  const importBtn = el('button', { class: 'btn', type: 'button' }, '↑ Upload exam file');
   const importInfo = el('p', { class: 'muted small', role: 'status' },
-    'Upload a JSON, TXT, or CSV exam file. Google Forms PDF imports will require a separate conversion step.');
+    'Upload PDF, Word, Excel, or a previously exported exam. Extracted questions must be reviewed before use.');
   importBtn.addEventListener('click', () => importInput.click());
   importInput.addEventListener('change', async () => {
     const file = importInput.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { importInfo.textContent = 'File exceeds 2 MB.'; return; }
+    if (file.size > 8 * 1024 * 1024) { importInfo.textContent = 'File exceeds 8 MB.'; return; }
     try {
-      const content = await file.text();
+      importInfo.textContent = 'Reading ' + file.name + '…';
+      const content = await readExamFile(file);
       if (/\.json$/i.test(file.name)) {
         const parsed = JSON.parse(content);
         const qs = Array.isArray(parsed) ? parsed : parsed.questions;
@@ -41,6 +42,34 @@ export function renderExamGenerator(root, ctx) {
     } catch (error) { importInfo.textContent = error instanceof Error ? error.message : 'Could not read file.'; }
     importInput.value = '';
   });
+  const formUrl = el('input', { class: 'input', type: 'url', placeholder: 'Paste a Google Forms link here', 'aria-label': 'Google Forms URL' });
+  const saveForm = el('button', { class: 'btn btn--primary', type: 'button' }, 'Save Google Form link');
+  const formInfo = el('div', { class: 'stack small' });
+  const formKey = 'ahba-exam-form-links';
+  function showForms() {
+    let links = [];
+    try { links = JSON.parse(localStorage.getItem(formKey) || '[]'); } catch {}
+    formInfo.replaceChildren(...links.map((link) => el('div', { class: 'exam-workspace__saved-form' },
+      el('span', {}, link.title || 'Google Form'),
+      el('a', { href: link.url, target: '_blank', rel: 'noopener noreferrer', class: 'btn' }, 'Open form'),
+      el('button', { class: 'btn', type: 'button', onclick: () => {
+        const updated = links.filter((entry) => entry.url !== link.url);
+        localStorage.setItem(formKey, JSON.stringify(updated)); showForms();
+      } }, 'Remove'))));
+  }
+  saveForm.addEventListener('click', () => {
+    try {
+      const url = new URL(formUrl.value.trim());
+      if (url.protocol !== 'https:' || !['docs.google.com', 'forms.gle'].includes(url.hostname) ||
+        (url.hostname === 'docs.google.com' && !/^\\/forms\\//.test(url.pathname))) throw new Error();
+      let links = [];
+      try { links = JSON.parse(localStorage.getItem(formKey) || '[]'); } catch {}
+      if (!links.some((item) => item.url === url.href)) links.push({ title: topic.value.trim() || 'Google Forms examination', url: url.href });
+      localStorage.setItem(formKey, JSON.stringify(links.slice(-30)));
+      formUrl.value = ''; showForms();
+    } catch { formInfo.prepend(el('p', { class: 'muted small' }, 'Enter a valid Google Forms link.')); }
+  });
+  showForms();
   const topic = el('input', { class: 'input', type: 'text', maxlength: '160', placeholder: 'e.g. Fiber Installation and Safety', 'aria-label': 'Training topic' });
   const count = el('input', { class: 'input', type: 'number', min: '1', max: '30', value: '10', 'aria-label': 'Number of questions' });
   const material = el('textarea', { class: 'input', rows: '9', maxlength: '30000', placeholder: 'Paste the training material here (100–30,000 characters). Remove employee personal data and confidential information.', 'aria-label': 'Training material' });
@@ -89,10 +118,53 @@ export function renderExamGenerator(root, ctx) {
   });
   root.append(el('div', { class: 'stack exam-workspace' },
     el('div', { class: 'card stack exam-workspace__form' },
-      el('div', { class: 'row', style: 'justify-content:flex-end;flex-wrap:wrap' }, importBtn, importInput), importInfo,
+      el('div', { class: 'exam-workspace__import-panel' },
+        el('div', { class: 'exam-workspace__import-choice' }, el('strong', {}, 'Upload an existing exam'), el('p', { class: 'muted small' }, 'PDF · Word · Excel · JSON · TXT · CSV'), importBtn, importInput),
+        el('div', { class: 'exam-workspace__import-choice' }, el('strong', {}, 'Use a Google Form'), el('p', { class: 'muted small' }, 'Keep using an exam you already created.'), formUrl, saveForm, formInfo)), importInfo,
       el('div', { class: 'exam-workspace__heading' }, el('div', {}, el('span', { class: 'exam-workspace__eyebrow' }, 'QUESTION BUILDER'), el('h3', {}, 'Generate an assessment'), el('p', { class: 'muted small' }, 'Turn approved training materials into a reviewed question bank.'))),
       el('div', { class: 'exam-workspace__fields' }, el('label', { class: 'stack small' }, 'Training topic', topic), el('label', { class: 'stack small' }, 'Questions (1–30)', count)),
       el('label', { class: 'stack small' }, 'Training content', material),
       el('div', { class: 'exam-workspace__actions' }, note, generate), status),
     results));
+}
+
+async function loadScript(url, globalName) {
+  if (window[globalName]) return window[globalName];
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = url; script.onload = resolve; script.onerror = () => reject(new Error('Document reader could not load. Check internet access.'));
+    document.head.append(script);
+  });
+  if (!window[globalName]) throw new Error('Document reader unavailable.');
+  return window[globalName];
+}
+async function readExamFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (['json','txt','csv'].includes(ext)) return file.text();
+  if (ext === 'pdf') {
+    const pdfjs = await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', 'pdfjsLib');
+    pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer(), disableWorker: true }).promise;
+    if (pdf.numPages > 80) throw new Error('PDF exceeds 80 pages.');
+    const pages = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const text = await page.getTextContent();
+      pages.push(text.items.map((item) => item.str || '').join(' '));
+    }
+    const output = pages.join('\n');
+    if (output.trim().length < 100) throw new Error('This PDF has no extractable text. Please use a text-based PDF.');
+    return output;
+  }
+  if (ext === 'docx') {
+    const mammoth = await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.9.1/mammoth.browser.min.js', 'mammoth');
+    const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+    return result.value || '';
+  }
+  if (ext === 'xlsx' || ext === 'xls') {
+    const XLSX = await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
+    const book = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    return book.SheetNames.map((name) => XLSX.utils.sheet_to_csv(book.Sheets[name])).join('\n');
+  }
+  throw new Error('Unsupported file type.');
 }
