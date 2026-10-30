@@ -18,13 +18,13 @@ export function renderExamGenerator(root, ctx) {
     if (file.size > 2 * 1024 * 1024) { importInfo.textContent = 'File exceeds 2 MB.'; return; }
     try {
       const content = await file.text();
-      if (/\\.json$/i.test(file.name)) {
+      if (/\.json$/i.test(file.name)) {
         const parsed = JSON.parse(content);
         const qs = Array.isArray(parsed) ? parsed : parsed.questions;
         if (!Array.isArray(qs) || !qs.length || qs.length > 500) throw new Error('Invalid exam JSON.');
         const valid = qs.every(q => typeof q.question === 'string' && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every(a => typeof a === 'string'));
         if (!valid) throw new Error('Questions need text and at least two answer choices.');
-        topic.value = String(parsed.topic || file.name.replace(/\\.json$/i, '')).slice(0, 160);
+        topic.value = String(parsed.topic || file.name.replace(/\.json$/i, '')).slice(0, 160);
         const preview = el('div', { class: 'stack' },
           el('div', { class: 'card' }, el('strong', {}, `${qs.length} imported draft questions`),
             el('p', { class: 'small muted' }, 'Review all questions and confirm answer keys before use. Import does not publish or assign exams.')));
@@ -35,7 +35,7 @@ export function renderExamGenerator(root, ctx) {
         importInfo.textContent = `Loaded ${qs.length} questions from ${file.name} for review.`;
       } else {
         material.value = content.slice(0, 30000);
-        topic.value ||= file.name.replace(/\\.(txt|csv)$/i, '').slice(0, 160);
+        topic.value ||= file.name.replace(/\.(txt|csv)$/i, '').slice(0, 160);
         importInfo.textContent = 'Text imported into Training content. Generate questions when ready.';
       }
     } catch (error) { importInfo.textContent = error instanceof Error ? error.message : 'Could not read file.'; }
