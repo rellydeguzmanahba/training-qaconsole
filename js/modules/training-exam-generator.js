@@ -19,6 +19,7 @@ export function renderExamGenerator(root, ctx) {
     try {
       importInfo.textContent = 'Reading ' + file.name + '…';
       const content = await readExamFile(file);
+      count.value = '10';
       if (/\.json$/i.test(file.name)) {
         const parsed = JSON.parse(content);
         const qs = Array.isArray(parsed) ? parsed : parsed.questions;
@@ -72,15 +73,17 @@ export function renderExamGenerator(root, ctx) {
   showForms();
   const topic = el('input', { class: 'input', type: 'text', maxlength: '160', placeholder: 'e.g. Fiber Installation and Safety', 'aria-label': 'Training topic' });
   const count = el('input', { class: 'input', type: 'number', min: '1', max: '30', value: '10', 'aria-label': 'Number of questions' });
+  count.value = '10';
   const material = el('textarea', { class: 'input', rows: '9', maxlength: '30000', placeholder: 'Paste the training material here (100–30,000 characters). Remove employee personal data and confidential information.', 'aria-label': 'Training material' });
   const status = el('p', { class: 'muted small', role: 'status' });
   const results = el('div', { class: 'stack' });
   const generate = el('button', { class: 'btn btn--primary', type: 'button' }, 'Generate draft questions');
   const note = el('p', { class: 'muted small' }, 'AI output is a draft. Check all answers against approved AHBA training materials. This tool does not publish, schedule, or assign an examination.');
   generate.addEventListener('click', async () => {
+    if (!count.value.trim()) count.value = '10';
     const title = topic.value.trim(), text = material.value.trim(), n = Number(count.value);
     if (!title || text.length < 100 || text.length > 30000 || !Number.isInteger(n) || n < 1 || n > 30) {
-      status.textContent = 'Enter a topic, 100–30,000 characters of training material, and 1–30 questions.';
+      status.textContent = !title ? 'Enter a training topic.' : text.length < 100 ? 'Training content needs at least 100 characters.' : text.length > 30000 ? 'Training content exceeds 30,000 characters.' : 'Choose a question count from 1 to 30.';
       return;
     }
     generate.disabled = true; status.textContent = 'Generating questions with Gemini…'; results.replaceChildren();
@@ -112,7 +115,7 @@ export function renderExamGenerator(root, ctx) {
       status.textContent = 'Draft generated. Review every question before using it in an assessment.';
     } catch (e) {
       console.error('Gemini question generation', e);
-      status.textContent = 'Could not generate questions. Verify the function is deployed, JWT access is enabled, and Gemini free-tier quota is available.';
+      status.textContent = 'Generation failed: ' + friendlyError(e) + '. Check Gemini quota or function deployment.';
       ctx.toast?.(friendlyError(e), 'error');
     } finally { generate.disabled = false; }
   });
