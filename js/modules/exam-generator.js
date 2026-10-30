@@ -1,6 +1,6 @@
 import { ensureCss } from '../utils/styles.js';
 import { el } from '../utils/dom.js';
-import { renderExamGenerator } from './training-exam-generator.js?v=20261030pdf1';
+import { renderExamGenerator } from './training-exam-generator.js?v=20261030error2';
 
 export function render(root, ctx) {
   ensureCss('css/exam-workspace.css?v=20261030pdf1');
