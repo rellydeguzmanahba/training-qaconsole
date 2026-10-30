@@ -1,7 +1,9 @@
+import { ensureCss } from '../utils/styles.js';
 import { el } from '../utils/dom.js';
 import { renderExamGenerator } from './training-exam-generator.js';
 
 export function render(root, ctx) {
+  ensureCss('css/exam-workspace.css?v=20261030a');
   root.append(
     el('header', { class: 'page-head' },
       el('div', {},
