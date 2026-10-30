@@ -9,7 +9,7 @@ export function renderExamGenerator(root, ctx) {
   }
   const topic = el('input', { class: 'input', type: 'text', maxlength: '160', placeholder: 'e.g. Fiber Installation and Safety', 'aria-label': 'Training topic' });
   const count = el('input', { class: 'input', type: 'number', min: '1', max: '30', value: '10', 'aria-label': 'Number of questions' });
-  const material = el('textarea', { class: 'input', rows: '12', maxlength: '30000', placeholder: 'Paste the training material here (100–30,000 characters). Remove employee personal data and confidential information.', 'aria-label': 'Training material' });
+  const material = el('textarea', { class: 'input', rows: '9', maxlength: '30000', placeholder: 'Paste the training material here (100–30,000 characters). Remove employee personal data and confidential information.', 'aria-label': 'Training material' });
   const status = el('p', { class: 'muted small', role: 'status' });
   const results = el('div', { class: 'stack' });
   const generate = el('button', { class: 'btn btn--primary', type: 'button' }, 'Generate draft questions');
@@ -53,13 +53,11 @@ export function renderExamGenerator(root, ctx) {
       ctx.toast?.(friendlyError(e), 'error');
     } finally { generate.disabled = false; }
   });
-  root.append(el('div', { class: 'stack' },
-    el('div', { class: 'card stack' },
-      el('h3', {}, 'Gemini AI · Exam Question Generator'),
-      el('p', { class: 'muted small' }, 'Create trainer-reviewable multiple-choice questions from approved training content.'),
-      el('label', { class: 'stack small' }, 'Training topic', topic),
-      el('label', { class: 'stack small' }, 'Number of questions (1–30)', count),
+  root.append(el('div', { class: 'stack exam-workspace' },
+    el('div', { class: 'card stack exam-workspace__form' },
+      el('div', { class: 'exam-workspace__heading' }, el('div', {}, el('span', { class: 'exam-workspace__eyebrow' }, 'QUESTION BUILDER'), el('h3', {}, 'Generate an assessment'), el('p', { class: 'muted small' }, 'Turn approved training materials into a reviewed question bank.'))),
+      el('div', { class: 'exam-workspace__fields' }, el('label', { class: 'stack small' }, 'Training topic', topic), el('label', { class: 'stack small' }, 'Questions (1–30)', count)),
       el('label', { class: 'stack small' }, 'Training content', material),
-      note, generate, status),
+      el('div', { class: 'exam-workspace__actions' }, note, generate), status),
     results));
 }
