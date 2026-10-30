@@ -7,6 +7,40 @@ export function renderExamGenerator(root, ctx) {
     root.append(el('div', { class: 'card' }, 'Only trainers and administrators can generate exam questions.'));
     return;
   }
+  const importInput = el('input', { type: 'file', accept: '.json,.txt,.csv,application/json,text/plain,text/csv', style: 'display:none', 'aria-label': 'Upload existing exam' });
+  const importBtn = el('button', { class: 'btn', type: 'button' }, '↑ Upload existing exam');
+  const importInfo = el('p', { class: 'muted small', role: 'status' },
+    'Upload a JSON, TXT, or CSV exam file. Google Forms PDF imports will require a separate conversion step.');
+  importBtn.addEventListener('click', () => importInput.click());
+  importInput.addEventListener('change', async () => {
+    const file = importInput.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { importInfo.textContent = 'File exceeds 2 MB.'; return; }
+    try {
+      const content = await file.text();
+      if (/\\.json$/i.test(file.name)) {
+        const parsed = JSON.parse(content);
+        const qs = Array.isArray(parsed) ? parsed : parsed.questions;
+        if (!Array.isArray(qs) || !qs.length || qs.length > 500) throw new Error('Invalid exam JSON.');
+        const valid = qs.every(q => typeof q.question === 'string' && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every(a => typeof a === 'string'));
+        if (!valid) throw new Error('Questions need text and at least two answer choices.');
+        topic.value = String(parsed.topic || file.name.replace(/\\.json$/i, '')).slice(0, 160);
+        const preview = el('div', { class: 'stack' },
+          el('div', { class: 'card' }, el('strong', {}, `${qs.length} imported draft questions`),
+            el('p', { class: 'small muted' }, 'Review all questions and confirm answer keys before use. Import does not publish or assign exams.')));
+        qs.forEach((q, i) => preview.append(el('div', { class: 'card stack' },
+          el('strong', {}, `${i + 1}. ${q.question}`),
+          el('ol', {}, q.choices.map((choice, j) => el('li', {}, j === q.correct_index ? `${choice} ✓ (unverified)` : choice))))));
+        results.replaceChildren(preview);
+        importInfo.textContent = `Loaded ${qs.length} questions from ${file.name} for review.`;
+      } else {
+        material.value = content.slice(0, 30000);
+        topic.value ||= file.name.replace(/\\.(txt|csv)$/i, '').slice(0, 160);
+        importInfo.textContent = 'Text imported into Training content. Generate questions when ready.';
+      }
+    } catch (error) { importInfo.textContent = error instanceof Error ? error.message : 'Could not read file.'; }
+    importInput.value = '';
+  });
   const topic = el('input', { class: 'input', type: 'text', maxlength: '160', placeholder: 'e.g. Fiber Installation and Safety', 'aria-label': 'Training topic' });
   const count = el('input', { class: 'input', type: 'number', min: '1', max: '30', value: '10', 'aria-label': 'Number of questions' });
   const material = el('textarea', { class: 'input', rows: '9', maxlength: '30000', placeholder: 'Paste the training material here (100–30,000 characters). Remove employee personal data and confidential information.', 'aria-label': 'Training material' });
@@ -55,6 +89,7 @@ export function renderExamGenerator(root, ctx) {
   });
   root.append(el('div', { class: 'stack exam-workspace' },
     el('div', { class: 'card stack exam-workspace__form' },
+      el('div', { class: 'row', style: 'justify-content:flex-end;flex-wrap:wrap' }, importBtn, importInput), importInfo,
       el('div', { class: 'exam-workspace__heading' }, el('div', {}, el('span', { class: 'exam-workspace__eyebrow' }, 'QUESTION BUILDER'), el('h3', {}, 'Generate an assessment'), el('p', { class: 'muted small' }, 'Turn approved training materials into a reviewed question bank.'))),
       el('div', { class: 'exam-workspace__fields' }, el('label', { class: 'stack small' }, 'Training topic', topic), el('label', { class: 'stack small' }, 'Questions (1–30)', count)),
       el('label', { class: 'stack small' }, 'Training content', material),
