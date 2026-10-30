@@ -91,7 +91,12 @@ export function renderExamGenerator(root, ctx) {
       const { data, error } = await ctx.sb.functions.invoke('generate-training-exam', {
         body: { topic: title, material: text, count: n },
       });
-      if (error) throw error;
+      if (error) {
+        let detail = '';
+        try { const payload = await error.context?.clone?.().json(); detail = String(payload?.error || ''); } catch {}
+        const httpStatus = error.context?.status;
+        throw new Error(detail || (httpStatus ? `Exam service returned HTTP ${httpStatus}.` : error.message || 'Exam service unavailable.'));
+      }
       if (!Array.isArray(data?.questions)) throw new Error(data?.error || 'No questions returned.');
       const questions = data.questions;
       const exportBtn = el('button', { class: 'btn', type: 'button' }, 'Export draft JSON');
@@ -115,8 +120,9 @@ export function renderExamGenerator(root, ctx) {
       status.textContent = 'Draft generated. Review every question before using it in an assessment.';
     } catch (e) {
       console.error('Gemini question generation', e);
-      status.textContent = 'Generation failed: ' + friendlyError(e) + '. Check Gemini quota or function deployment.';
-      ctx.toast?.(friendlyError(e), 'error');
+      const message = String(e?.message || 'Unknown generation error').slice(0, 260);
+      status.textContent = 'Generation failed: ' + message;
+      ctx.toast?.(message, 'error');
     } finally { generate.disabled = false; }
   });
   root.append(el('div', { class: 'stack exam-workspace' },
