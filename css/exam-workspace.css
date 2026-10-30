@@ -1,0 +1,14 @@
+/* AI exam workspace: compact, consistent with AHBA green/gold design system */
+.exam-workspace{max-width:1160px;width:100%;margin:0 auto}
+.exam-workspace__form{padding:clamp(18px,2.3vw,30px)!important;gap:18px!important}
+.exam-workspace__heading{padding-bottom:15px;border-bottom:1px solid rgba(18,68,52,.12)}
+.exam-workspace__heading h3{font-size:clamp(20px,2vw,26px);letter-spacing:-.025em;margin:5px 0}
+.exam-workspace__eyebrow{font-size:10px;font-weight:800;letter-spacing:.17em;color:#a08032}
+.exam-workspace__fields{display:grid;grid-template-columns:minmax(0,1fr) 175px;gap:16px;align-items:end}
+.exam-workspace .input{max-width:100%;box-sizing:border-box}
+.exam-workspace textarea.input{min-height:190px;resize:vertical;line-height:1.55}
+.exam-workspace__actions{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.exam-workspace__actions .muted{flex:1 1 350px;margin:0}
+.exam-workspace__actions .btn{min-height:43px;white-space:normal}
+.exam-workspace .card.stack{gap:12px}
+@media(max-width:700px){.exam-workspace__fields{grid-template-columns:minmax(0,1fr)}.exam-workspace__actions{align-items:stretch;flex-direction:column}.exam-workspace__actions .muted{flex:auto}.exam-workspace__actions .btn{width:100%}}
