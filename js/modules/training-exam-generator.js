@@ -113,21 +113,42 @@ export function renderExamGenerator(root, ctx) {
         const category=input('Category');category.value=q.topic;
         return {text,opts,answer,category,card:el('article',{class:'card stack exam-review__question-card'},el('div',{class:'exam-review__question-heading'},el('span',{class:'exam-review__question-number'},'QUESTION '+String(i+1).padStart(2,'0')),el('span',{class:'exam-review__question-tag'},'Review required')),el('div',{class:'exam-review__question-content'},field('Question text',text),el('div',{class:'exam-review__choices'},...opts.map((o,j)=>field('Choice '+String.fromCharCode(65+j),o))),el('div',{class:'exam-review__answer-area'},field('✓ Correct answer (required)',answer),field('Topic / Category',category))))};
       });
-      const save=btn('Save '+editors.length+' reviewed questions',async()=>{
+      const examName=input('Examination title');
+      examName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();
+      const examPassing=input('Passing score (%)','number');examPassing.value='80';
+      const examDuration=input('Duration (minutes)','number');examDuration.value='60';
+      const examAttempts=input('Allowed attempts','number');examAttempts.value='1';
+      const settings=el('section',{class:'card stack exam-review__settings'},el('h3',{},'Examination draft details'),field('Examination title',examName),el('div',{class:'exam-review__settings-grid'},field('Passing score (%)',examPassing),field('Duration (minutes)',examDuration),field('Allowed attempts',examAttempts)),el('p',{class:'muted small'},'Importing creates one draft examination. You can assign technicians and activate it afterward.'));
+      const save=btn('Import Examination',async()=>{
         try{
           const payload=editors.map(x=>({question:x.text.value.trim(),choices:x.opts.map(o=>o.value.trim()),correct_index:x.answer.value===''?null:Number(x.answer.value),topic:x.category.value.trim()||'General',difficulty:'medium'}));
           const bad=payload.findIndex(q=>!q.question||q.choices.length!==4||q.choices.some(x=>!x)||q.correct_index===null);
           if(bad>=0){editors[bad].card.scrollIntoView({behavior:'smooth',block:'start'});editors[bad].card.classList.add('exam-review__invalid');editors[bad].answer.focus({preventScroll:true});throw Error('Review question '+(bad+1)+': all choices and a verified correct answer are required.');}
-          if(!confirm('Save '+payload.length+' reviewed questions to the Question Bank?'))return;
-          const {error}=await sb.from('exam_questions').insert(payload);if(error)throw error;
-          info('Saved '+payload.length+' questions.');modal.close();await questions();
+          const title=examName.value.trim(),passing=Number(examPassing.value),duration=Number(examDuration.value),attempts=Number(examAttempts.value);
+          if(!title||title.length>160)throw Error('Enter an examination title (maximum 160 characters).');
+          if(!Number.isFinite(passing)||passing<1||passing>100)throw Error('Passing score must be 1–100%.');
+          if(!Number.isInteger(duration)||duration<1||duration>480)throw Error('Duration must be 1–480 minutes.');
+          if(!Number.isInteger(attempts)||attempts<1||attempts>20)throw Error('Allowed attempts must be 1–20.');
+          if(!confirm('Create draft examination "'+title+'" with '+payload.length+' verified questions?'))return;
+          save.disabled=true;save.textContent='Creating examination…';
+          try{
+            const {data:inserted,error:questionError}=await sb.from('exam_questions').insert(payload).select('id');
+            if(questionError)throw questionError;
+            if(!inserted||inserted.length!==payload.length)throw Error('Could not verify imported question IDs. No exam draft was created.');
+            const {data:exam,error:examError}=await sb.from('exams').insert({title,question_count:payload.length,passing_percent:passing,duration_minutes:duration,max_attempts:attempts,active:false}).select('id').single();
+            if(examError)throw Error('Questions imported, but examination draft creation failed: '+examError.message);
+            const {error:poolError}=await sb.from('exam_pool').insert(inserted.map(q=>({exam_id:exam.id,question_id:q.id})));
+            if(poolError)throw Error('Draft created, but attaching questions failed: '+poolError.message+'. Check this draft before activating.');
+            modal.close();info('Created draft examination "'+title+'" with '+payload.length+' questions. Open Examinations to assign and activate it.');
+            show('Examinations',exams);
+          }finally{save.disabled=false;save.textContent='Import Examination';}
         }catch(e){modalStatus.textContent='Error: '+String(e.message||e);err(e);}
       });
-      save.textContent='Import '+editors.length+' Questions';
+      save.textContent='Import Examination';
       save.classList.add('exam-review__import-button');
       const cancel=btn('Cancel',()=>modal.close());
       modalFooter.replaceChildren(el('span',{class:'exam-review__footer-note'},'✓ '+editors.length+' questions ready for review'),el('div',{class:'exam-review__footer-actions'},cancel,save));
-      review.append(...editors.map(x=>x.card));
+      review.append(settings,...editors.map(x=>x.card));
       modalTitle.textContent='Review '+editors.length+' imported questions';
       modalStatus.textContent=f.name+' · '+editors.length+' questions extracted. Verify every answer before saving.';
       info('Imported '+editors.length+' questions from '+f.name+'. Review in the popup.');
