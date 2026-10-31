@@ -184,7 +184,7 @@ export function renderExamGenerator(root, ctx) {
   try{employees=await rows('profiles',t=>t.select('user_id,full_name,role,active').eq('role','technician').eq('active',true).order('full_name').limit(1000));}
   catch(e){info('Could not load employee directory: '+String(e.message||e));}
   const employeeList=el('datalist',{id:'exam-employee-lookup'});
-  employees.forEach(p=>employeeList.append(el('option',{value:p.full_name+' — '+p.user_id})));
+  employees.forEach(p=>employeeList.append(el('option',{value:p.full_name})));
   listing.append(employeeList);
   ex.forEach(e=>{
    const search=input('Search employee name','search');
@@ -192,7 +192,9 @@ export function renderExamGenerator(root, ctx) {
    search.setAttribute('aria-label','Search active employee by name');
    const assign=btn('Assign employee',async()=>{try{
     const term=search.value.trim();
-    const match=employees.find(p=>term===p.full_name+' — '+p.user_id)||employees.filter(p=>p.full_name.toLowerCase()===term.toLowerCase())[0];
+    const matches=employees.filter(p=>p.full_name.toLowerCase()===term.toLowerCase());
+    if(matches.length>1)throw Error('Multiple employees share this name. Please contact an administrator to distinguish their accounts.');
+    const match=matches[0];
     if(!match)throw Error('Select an active employee from the suggestions. If missing, confirm their portal account is active.');
     const {error}=await sb.from('exam_assignments').upsert({exam_id:e.id,user_id:match.user_id});if(error)throw error;
     info('Assigned '+match.full_name+' to '+e.title+'.');
