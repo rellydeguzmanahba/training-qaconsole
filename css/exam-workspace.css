@@ -21,3 +21,18 @@
 .exam-workspace__saved-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid rgba(18,68,52,.1)}
 .exam-workspace__saved-form>span{flex:1 1 120px;overflow-wrap:anywhere}
 @media(max-width:800px){.exam-workspace__import-panel{grid-template-columns:1fr}}
+
+
+/* Examination import — prominent first action */
+.exam-import__card{padding:24px!important;border:1px solid #cfe5da!important;background:linear-gradient(120deg,#f3fbf6 0%,#fff 72%)!important;box-shadow:0 8px 24px rgba(19,77,52,.06)}
+.exam-import__header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.exam-import__header h3{margin:5px 0 7px;font-size:21px;letter-spacing:-.35px;color:#153f2b}
+.exam-import__eyebrow{font-size:11px;letter-spacing:1.6px;font-weight:800;color:#367953}
+.exam-import__badge{display:inline-flex;border:1px solid #c8decf;border-radius:999px;padding:8px 12px;background:white;color:#31694d;font-size:11px;font-weight:700;white-space:nowrap}
+.exam-import__actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:8px 0 0}
+.exam-import__button{display:inline-flex;align-items:center;gap:12px;padding:13px 18px!important;border-radius:12px!important;background:#17623e!important;color:#fff!important;border:1px solid #17623e!important;box-shadow:0 5px 12px rgba(23,98,62,.16);font-weight:750!important;transition:transform .15s,box-shadow .15s}
+.exam-import__button:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(23,98,62,.22)}
+.exam-import__button:focus-visible{outline:3px solid #e2b75e;outline-offset:3px}
+.exam-import__icon{display:grid;place-items:center;background:rgba(255,255,255,.18);width:26px;height:26px;border-radius:8px;font-size:21px;line-height:1}
+.exam-import__arrow{font-size:19px;margin-left:4px;opacity:.8}
+@media(max-width:600px){.exam-import__card{padding:18px!important}.exam-import__badge{white-space:normal}.exam-import__button{width:100%;justify-content:center}}
