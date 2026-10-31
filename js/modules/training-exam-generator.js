@@ -178,7 +178,7 @@ export function renderExamGenerator(root, ctx) {
     info('Draft exam created. Assign technicians and activate it when ready.');await exams();
    }catch(e){err(e);}
   });
-  panel.append(el('div',{class:'card stack'},el('h3',{},'Create examination'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create));
+  panel.append(el('div',{class:'card stack'},el('h3',{},'Optional: Build examination from existing Question Bank'),el('p',{class:'muted small'},'Only use this if you want to combine previously saved questions. Uploaded files already create a draft automatically.'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create));
   const listing=el('div',{class:'stack'},el('h3',{},'Saved examinations'));
   ex.forEach(e=>{
    const user=input('Employee Supabase auth user UUID');
