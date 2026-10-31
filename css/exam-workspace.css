@@ -48,3 +48,24 @@
 .exam-review__questions>.card{border:1px solid #e0e8e1;border-radius:13px;padding:18px}
 .exam-review__questions input,.exam-review__questions textarea,.exam-review__questions select{max-width:100%;box-sizing:border-box}
 @media(max-width:600px){.exam-review__header{padding:16px;gap:8px}.exam-review__header h2{font-size:18px}.exam-review__body{padding:14px}.exam-review__questions>.card{padding:12px}}
+
+
+/* More colorful examination review popup and clear question hierarchy */
+.exam-review__dialog{border:2px solid #c5d8cb;background:#f5f9f5}
+.exam-review__header{background:linear-gradient(115deg,#114b34 0%,#26744d 72%,#397f5a 100%);border-bottom:4px solid #d6b35b;color:#fff}
+.exam-review__header .exam-import__eyebrow{color:#f2d38b}
+.exam-review__header h2{color:#fff;font-weight:800;letter-spacing:-.4px}
+.exam-review__header p{color:#e3f2e7!important}
+.exam-review__header>.btn{background:#fff!important;color:#164b30!important;border:1px solid #c9e4d0!important;font-weight:700}
+.exam-review__body{background:linear-gradient(180deg,#f0f7f1,#f9fbf9)}
+.exam-review__questions>.exam-review__question-card{padding:0!important;overflow:hidden;border:1px solid #d2e1d6!important;background:#fff;box-shadow:0 4px 16px rgba(23,67,45,.06)}
+.exam-review__question-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:linear-gradient(90deg,#236b46,#36885b);border-bottom:3px solid #d8b75c;color:white}
+.exam-review__question-number{font-size:15px;font-weight:850;letter-spacing:1px;color:#fff}
+.exam-review__question-tag{background:#f9e8b6;color:#5a4718;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800}
+.exam-review__question-content{padding:18px;display:grid;gap:15px}
+.exam-review__question-content label{font-weight:700;color:#214b35}
+.exam-review__question-content textarea{border:1px solid #b7d7c3!important;background:#fafffb;min-height:72px}
+.exam-review__choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px;border-radius:12px;background:#f4f8f4;border:1px solid #e0eae2}
+.exam-review__answer-area{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px;border-radius:12px;background:#fff8e8;border:1px solid #f0dba6}
+.exam-review__answer-area select{border:1px solid #d7b45e!important;background:#fff}
+@media(max-width:600px){.exam-review__choices,.exam-review__answer-area{grid-template-columns:1fr}.exam-review__question-heading{padding:12px}.exam-review__question-content{padding:12px}}
