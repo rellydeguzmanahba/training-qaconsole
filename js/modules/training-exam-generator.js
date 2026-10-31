@@ -180,11 +180,41 @@ export function renderExamGenerator(root, ctx) {
   });
   panel.append(el('div',{class:'card stack'},el('h3',{},'Optional: Build examination from existing Question Bank'),el('p',{class:'muted small'},'Only use this if you want to combine previously saved questions. Uploaded files already create a draft automatically.'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create));
   const listing=el('div',{class:'stack'},el('h3',{},'Saved examinations'));
+  let employees=[];
+  try{employees=await rows('profiles',t=>t.select('user_id,full_name,role,active').eq('role','technician').eq('active',true).order('full_name').limit(1000));}
+  catch(e){info('Could not load employee directory: '+String(e.message||e));}
+  const employeeList=el('datalist',{id:'exam-employee-lookup'});
+  employees.forEach(p=>employeeList.append(el('option',{value:p.full_name+' — '+p.user_id})));
+  listing.append(employeeList);
   ex.forEach(e=>{
-   const user=input('Employee Supabase auth user UUID');
-   const assign=btn('Assign technician',async()=>{try{const id=user.value.trim();if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('Enter the technician auth user UUID.');const {error}=await sb.from('exam_assignments').upsert({exam_id:e.id,user_id:id});if(error)throw error;info('Technician assigned.');}catch(x){err(x);}});
+   const search=input('Search employee name','search');
+   search.setAttribute('list','exam-employee-lookup');
+   search.setAttribute('aria-label','Search active employee by name');
+   const assign=btn('Assign employee',async()=>{try{
+    const term=search.value.trim();
+    const match=employees.find(p=>term===p.full_name+' — '+p.user_id)||employees.filter(p=>p.full_name.toLowerCase()===term.toLowerCase())[0];
+    if(!match)throw Error('Select an active employee from the suggestions. If missing, confirm their portal account is active.');
+    const {error}=await sb.from('exam_assignments').upsert({exam_id:e.id,user_id:match.user_id});if(error)throw error;
+    info('Assigned '+match.full_name+' to '+e.title+'.');
+   }catch(x){err(x);}});
    const toggle=btn(e.active?'Pause examination':'Activate examination',async()=>{try{const {error}=await sb.from('exams').update({active:!e.active}).eq('id',e.id);if(error)throw error;await exams();}catch(x){err(x);}});
-   listing.append(el('div',{class:'card stack'},el('strong',{},e.title),el('p',{class:'muted small'},e.question_count+' questions · '+e.passing_percent+'% passing · '+e.duration_minutes+' min · '+(e.active?'Active':'Draft')),field('Assign by auth user ID',user),el('div',{class:'row'},assign,toggle)));
+   const remove=btn('Delete draft',async()=>{try{
+    if(e.active)throw Error('Pause this examination before deleting it.');
+    const {data:attempts,error:checkError}=await sb.from('exam_attempts').select('id').eq('exam_id',e.id).limit(1);
+    if(checkError)throw checkError;
+    if(attempts.length)throw Error('This examination has attempt history and cannot be deleted. Keep it paused to preserve results.');
+    if(!confirm('Permanently delete draft "'+e.title+'"? This removes the draft and its assignments, but keeps shared Question Bank questions.'))return;
+    const {data,error}=await sb.from('exams').delete().eq('id',e.id).eq('active',false).select('id');
+    if(error)throw error;if(!data?.length)throw Error('Could not delete the draft.');
+    info('Deleted draft "'+e.title+'".');await exams();
+   }catch(x){err(x);}});
+   remove.classList.add('exam-delete__button');
+   const card=el('article',{class:'card stack exam-saved__card'},
+    el('div',{class:'exam-saved__heading'},el('div',{},el('strong',{},e.title),el('p',{class:'muted small'},e.question_count+' questions · '+e.passing_percent+'% passing · '+e.duration_minutes+' min · '+(e.active?'Active':'Draft')))),
+    field('Assign an existing employee',search),
+    el('p',{class:'muted small'},employees.length?'Start typing a name and choose an employee from the suggestions.':'No active technician accounts available in the employee directory.'),
+    el('div',{class:'row'},assign,toggle,...(e.active?[]:[remove])));
+   listing.append(card);
   });
   panel.append(listing);
  }
