@@ -90,3 +90,9 @@
 .exam-review__settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .exam-review__settings input{width:100%;box-sizing:border-box}
 @media(max-width:600px){.exam-review__settings-grid{grid-template-columns:1fr}}
+
+.exam-saved__card{border:1px solid #d7e5da!important;gap:12px!important}
+.exam-saved__heading{padding-bottom:8px;border-bottom:1px solid #e6eee8}
+.exam-saved__heading strong{font-size:16px;color:#164c33}
+.exam-delete__button{color:#a73535!important;border-color:#e6bcbc!important;background:#fff7f7!important}
+.exam-delete__button:hover{background:#fce7e7!important}
