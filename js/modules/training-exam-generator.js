@@ -165,7 +165,7 @@ export function renderExamGenerator(root, ctx) {
   linked.forEach(x=>{if(!links.has(x.question_id))links.set(x.question_id,new Set());links.get(x.question_id).add(x.exam_id);});
   const draw=()=>{
     const term=search.value.trim().toLowerCase(),selected=group.value;
-    const visible=qs.filter(q=>(selected==='all'||selected==='unassigned'?!links.has(q.id):links.get(q.id)?.has(selected))&&(!term||[q.question,q.topic,...q.choices].some(v=>String(v).toLowerCase().includes(term))));
+    const visible=qs.filter(q=>(selected==='all'||(selected==='unassigned'?!links.has(q.id):links.get(q.id)?.has(selected)))&&(!term||[q.question,q.topic,...q.choices].some(v=>String(v).toLowerCase().includes(term))));
     counter.textContent=visible.length+' of '+qs.length+' questions shown';
     items.replaceChildren();
     if(!visible.length){items.append(el('p',{class:'muted'},'No matching questions. Try another batch or search term.'));return;}
