@@ -201,7 +201,7 @@ export function renderExamGenerator(root, ctx) {
     info('Draft exam created. Assign technicians and activate it when ready.');await exams();
    }catch(e){err(e);}
   });
-  const manualDraft=el('details',{class:'card exam-manual'},el('summary',{},'＋ Advanced: Build an examination from existing questions'),el('div',{class:'stack'},el('h3',{},'Optional: Build examination from existing Question Bank'),el('p',{class:'muted small'},'Only use this if you want to combine previously saved questions. Uploaded files already create a draft automatically.'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create)));
+  const manualDraft=el('details',{class:'card exam-manual'},el('summary',{},'＋ Advanced: Build an examination from existing questions'),el('div',{class:'stack'},el('h3',{},'Optional: Build examination from existing Question Bank'),el('p',{class:'muted small'},'Only use this if you want to combine previously saved questions. Uploaded files already create a draft automatically.'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create));
   const listing=el('div',{class:'stack'},el('h3',{},'Saved examinations'));
   let employees=[];
   try{employees=await rows('profiles',t=>t.select('user_id,full_name,role,active').eq('role','technician').eq('active',true).order('full_name').limit(1000));}
