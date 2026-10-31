@@ -123,3 +123,18 @@
 .exam-manual>.stack{padding:20px}
 .exam-manual>.card{border:0!important;box-shadow:none!important}
 @media(max-width:650px){.exam-bank__filters{grid-template-columns:1fr}.exam-bank__question summary{flex-wrap:wrap}.exam-bank__topic{display:none}}
+
+
+/* File-name categories for the Question Bank */
+.exam-bank__folders{gap:12px!important}
+.exam-bank__folder{border:1px solid #cbded0;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(19,67,43,.04)}
+.exam-bank__folder>summary{display:flex;align-items:center;gap:13px;padding:18px 20px;cursor:pointer;list-style:none;background:linear-gradient(90deg,#e9f5ed,#fff);color:#174c32}
+.exam-bank__folder>summary::-webkit-details-marker{display:none}
+.exam-bank__folder[open]>summary{border-bottom:1px solid #d9e8dc}
+.exam-bank__folder-icon{background:#226a45;color:#fff;border-radius:9px;padding:7px 10px;font-size:18px}
+.exam-bank__folder-title{font-weight:850;font-size:16px;flex:1;min-width:0;overflow-wrap:anywhere}
+.exam-bank__folder-count{font-size:12px;color:#3a7452;background:#fff;border:1px solid #cfe3d3;border-radius:999px;padding:6px 10px;white-space:nowrap}
+.exam-bank__folder-body{padding:14px;gap:8px!important;background:#f9fcf9}
+.exam-bank__folder-actions{padding:12px 16px;border-top:1px solid #e3eee5}
+.exam-bank__folder-actions .muted{margin:0}
+@media(max-width:600px){.exam-bank__folder>summary{padding:13px;gap:9px}.exam-bank__folder-count{font-size:10px}.exam-bank__folder-body{padding:9px}}
