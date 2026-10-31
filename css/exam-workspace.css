@@ -96,3 +96,30 @@
 .exam-saved__heading strong{font-size:16px;color:#164c33}
 .exam-delete__button{color:#a73535!important;border-color:#e6bcbc!important;background:#fff7f7!important}
 .exam-delete__button:hover{background:#fce7e7!important}
+
+
+/* Examination Management: searchable, batch-based Question Bank */
+.exam-bank{padding:22px!important;border:1px solid #d9e8dc!important}
+.exam-bank__heading h3{margin:0 0 5px;color:#174e34;font-size:19px}
+.exam-bank__filters{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(210px,1fr);gap:12px}
+.exam-bank__items{gap:9px!important}
+.exam-bank__question{background:#fff;border:1px solid #dce7df;border-radius:11px;overflow:hidden}
+.exam-bank__question[open]{border-color:#95bfa5;box-shadow:0 4px 14px rgba(24,77,49,.06)}
+.exam-bank__question summary{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;list-style:none;font-weight:700;color:#183d2c}
+.exam-bank__question summary::-webkit-details-marker{display:none}
+.exam-bank__question summary:after{content:'⌄';margin-left:auto;font-size:18px;color:#487c5a}
+.exam-bank__question[open] summary:after{content:'⌃'}
+.exam-bank__question[open] summary{background:#eff8f0;border-bottom:1px solid #dce7df}
+.exam-bank__index{font-size:11px;color:#fff;background:#27764d;border-radius:7px;padding:6px 8px;flex:none}
+.exam-bank__question-text{min-width:0;flex:1;line-height:1.4}
+.exam-bank__topic{font-size:11px;color:#3f7854;background:#eaf5ec;border-radius:999px;padding:5px 9px;font-weight:650}
+.exam-bank__question-body{padding:15px 18px}
+.exam-bank__question-body ol{margin:0 0 12px;padding-left:25px;line-height:1.9}
+.exam-bank__correct{color:#136b3a;font-weight:800}
+.exam-manual{padding:0!important;overflow:hidden}
+.exam-manual>summary{cursor:pointer;list-style:none;padding:18px 22px;color:#205d3d;font-weight:800}
+.exam-manual>summary::-webkit-details-marker{display:none}
+.exam-manual[open]>summary{background:#eff7f0;border-bottom:1px solid #dce7df}
+.exam-manual>.stack{padding:20px}
+.exam-manual>.card{border:0!important;box-shadow:none!important}
+@media(max-width:650px){.exam-bank__filters{grid-template-columns:1fr}.exam-bank__question summary{flex-wrap:wrap}.exam-bank__topic{display:none}}
