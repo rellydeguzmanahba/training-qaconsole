@@ -36,3 +36,15 @@
 .exam-import__icon{display:grid;place-items:center;background:rgba(255,255,255,.18);width:26px;height:26px;border-radius:8px;font-size:21px;line-height:1}
 .exam-import__arrow{font-size:19px;margin-left:4px;opacity:.8}
 @media(max-width:600px){.exam-import__card{padding:18px!important}.exam-import__badge{white-space:normal}.exam-import__button{width:100%;justify-content:center}}
+
+
+/* Uploaded examination review popup */
+.exam-review__dialog{width:min(900px,calc(100vw - 28px));max-width:900px;max-height:min(92vh,900px);margin:auto;padding:0;border:1px solid #d7e5dc;border-radius:18px;background:#fff;color:#183c2b;box-shadow:0 25px 80px rgba(12,36,24,.25);overflow:hidden}
+.exam-review__dialog::backdrop{background:rgba(11,29,23,.64);backdrop-filter:blur(3px)}
+.exam-review__header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 24px 17px;border-bottom:1px solid #e3ebe6;background:linear-gradient(110deg,#eff9f1,#fff)}
+.exam-review__header h2{font-size:22px;margin:5px 0 8px;color:#164b30}
+.exam-review__body{padding:20px 24px 28px;overflow-y:auto;max-height:calc(min(92vh,900px) - 115px)}
+.exam-review__questions{gap:14px}
+.exam-review__questions>.card{border:1px solid #e0e8e1;border-radius:13px;padding:18px}
+.exam-review__questions input,.exam-review__questions textarea,.exam-review__questions select{max-width:100%;box-sizing:border-box}
+@media(max-width:600px){.exam-review__header{padding:16px;gap:8px}.exam-review__header h2{font-size:18px}.exam-review__body{padding:14px}.exam-review__questions>.card{padding:12px}}
