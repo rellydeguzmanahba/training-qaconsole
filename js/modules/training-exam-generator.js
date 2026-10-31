@@ -1,179 +1,113 @@
 import { el } from '../utils/dom.js';
-import { friendlyError } from '../utils/errors.js';
 
-// Draft-only workflow. Never auto-publish AI output or expose this view to employee accounts.
+// No AI APIs. All persisted records are stored in Supabase with RLS.
 export function renderExamGenerator(root, ctx) {
-  if (!['admin', 'trainer'].includes(ctx.role)) {
-    root.append(el('div', { class: 'card' }, 'Only trainers and administrators can generate exam questions.'));
-    return;
-  }
-  const importInput = el('input', { type: 'file', accept: '.pdf,.docx,.xlsx,.xls,.json,.txt,.csv,application/pdf,application/json,text/plain,text/csv', style: 'display:none', 'aria-label': 'Upload existing exam' });
-  const importBtn = el('button', { class: 'btn', type: 'button' }, '↑ Upload exam file');
-  const importInfo = el('p', { class: 'muted small', role: 'status' },
-    'Upload PDF, Word, Excel, or a previously exported exam. Extracted questions must be reviewed before use.');
-  importBtn.addEventListener('click', () => importInput.click());
-  importInput.addEventListener('change', async () => {
-    const file = importInput.files?.[0];
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { importInfo.textContent = 'File exceeds 8 MB.'; return; }
-    try {
-      importInfo.textContent = 'Reading ' + file.name + '…';
-      const content = await readExamFile(file);
-      count.value = '10';
-      if (/\.json$/i.test(file.name)) {
-        const parsed = JSON.parse(content);
-        const qs = Array.isArray(parsed) ? parsed : parsed.questions;
-        if (!Array.isArray(qs) || !qs.length || qs.length > 500) throw new Error('Invalid exam JSON.');
-        const valid = qs.every(q => typeof q.question === 'string' && Array.isArray(q.choices) && q.choices.length >= 2 && q.choices.every(a => typeof a === 'string'));
-        if (!valid) throw new Error('Questions need text and at least two answer choices.');
-        topic.value = String(parsed.topic || file.name.replace(/\.json$/i, '')).slice(0, 160);
-        const preview = el('div', { class: 'stack' },
-          el('div', { class: 'card' }, el('strong', {}, `${qs.length} imported draft questions`),
-            el('p', { class: 'small muted' }, 'Review all questions and confirm answer keys before use. Import does not publish or assign exams.')));
-        qs.forEach((q, i) => preview.append(el('div', { class: 'card stack' },
-          el('strong', {}, `${i + 1}. ${q.question}`),
-          el('ol', {}, q.choices.map((choice, j) => el('li', {}, j === q.correct_index ? `${choice} ✓ (unverified)` : choice))))));
-        results.replaceChildren(preview);
-        importInfo.textContent = `Loaded ${qs.length} questions from ${file.name} for review.`;
-      } else {
-        material.value = content.slice(0, 30000);
-        topic.value ||= file.name.replace(/\.(txt|csv)$/i, '').slice(0, 160);
-        importInfo.textContent = 'Document text loaded. Gemini can generate NEW draft questions from it; original questions are not imported as a verified exam.';
-      }
-    } catch (error) { importInfo.textContent = error instanceof Error ? error.message : 'Could not read file.'; }
-    importInput.value = '';
+ const sb=ctx.sb, trainer=['admin','trainer'].includes(ctx.role);
+ const status=el('p',{class:'muted small',role:'status'});
+ const panel=el('div',{class:'stack'});
+ const tabs=el('div',{class:'row'});
+ const btn=(label,fn)=>el('button',{class:'btn',type:'button',onclick:fn},label);
+ const field=(label,node)=>el('label',{class:'stack small'},label,node);
+ const input=(placeholder,type='text')=>el('input',{class:'input',type,placeholder});
+ const info=(message)=>{status.textContent=message;};
+ const err=(e)=>info('Error: '+String(e.message||e));
+ async function rows(table,query){const {data,error}=await query(sb.from(table));if(error)throw error;return data||[];}
+ async function questions(){
+  panel.replaceChildren();
+  const qs=await rows('exam_questions',t=>t.select('*').order('created_at',{ascending:false}).limit(500));
+  const topic=input('Topic / Category'),question=el('textarea',{class:'input',rows:'3',placeholder:'Question (English / Filipino)'});
+  const choices=Array.from({length:4},(_,i)=>input('Choice '+String.fromCharCode(65+i)));
+  const correct=el('select',{class:'input'},...[0,1,2,3].map(i=>el('option',{value:i},'Correct answer: '+String.fromCharCode(65+i))));
+  const difficulty=el('select',{class:'input'},...['easy','medium','hard'].map(s=>el('option',{value:s},s)));
+  const save=btn('Save question',async()=>{
+   try{
+    if(!question.value.trim()||choices.some(c=>!c.value.trim()))throw Error('Enter the question and all four choices.');
+    const {error}=await sb.from('exam_questions').insert({topic:topic.value.trim()||'General',question:question.value.trim(),choices:choices.map(c=>c.value.trim()),correct_index:Number(correct.value),difficulty:difficulty.value});
+    if(error)throw error;info('Question saved.');await questions();
+   }catch(e){err(e);}
   });
-  const formUrl = el('input', { class: 'input', type: 'url', placeholder: 'Paste a Google Forms link here', 'aria-label': 'Google Forms URL' });
-  const saveForm = el('button', { class: 'btn btn--primary', type: 'button' }, 'Save Google Form link');
-  const formInfo = el('div', { class: 'stack small' });
-  const formKey = 'ahba-exam-form-links';
-  function showForms() {
-    let links = [];
-    try { links = JSON.parse(localStorage.getItem(formKey) || '[]'); } catch {}
-    formInfo.replaceChildren(...links.map((link) => el('div', { class: 'exam-workspace__saved-form' },
-      el('span', {}, link.title || 'Google Form'),
-      el('a', { href: link.url, target: '_blank', rel: 'noopener noreferrer', class: 'btn' }, 'Open form'),
-      el('button', { class: 'btn', type: 'button', onclick: () => {
-        const updated = links.filter((entry) => entry.url !== link.url);
-        localStorage.setItem(formKey, JSON.stringify(updated)); showForms();
-      } }, 'Remove'))));
-  }
-  saveForm.addEventListener('click', () => {
-    try {
-      const url = new URL(formUrl.value.trim());
-      if (url.protocol !== 'https:' || !['docs.google.com', 'forms.gle'].includes(url.hostname) ||
-        (url.hostname === 'docs.google.com' && !/^\/forms\//.test(url.pathname))) throw new Error();
-      let links = [];
-      try { links = JSON.parse(localStorage.getItem(formKey) || '[]'); } catch {}
-      if (!links.some((item) => item.url === url.href)) links.push({ title: topic.value.trim() || 'Google Forms examination', url: url.href });
-      localStorage.setItem(formKey, JSON.stringify(links.slice(-30)));
-      formUrl.value = ''; showForms();
-    } catch { formInfo.prepend(el('p', { class: 'muted small' }, 'Enter a valid Google Forms link.')); }
+  const editor=el('div',{class:'card stack'},el('h3',{},'Add a question'),field('Topic',topic),field('Question',question),...choices.map((c,i)=>field('Answer '+String.fromCharCode(65+i),c)),field('Answer key',correct),field('Difficulty',difficulty),save);
+  const file=el('input',{type:'file',accept:'.json,application/json'});
+  const importer=btn('Import JSON',()=>file.click());
+  file.onchange=async()=>{
+   try{
+    const f=file.files?.[0];if(!f)return;if(f.size>3e6)throw Error('File exceeds 3 MB.');
+    const parsed=JSON.parse(await f.text()),list=Array.isArray(parsed)?parsed:parsed.questions;
+    if(!Array.isArray(list)||list.length<1||list.length>500)throw Error('Expected 1–500 questions.');
+    const valid=list.every(q=>typeof q.question==='string'&&q.question.trim()&&Array.isArray(q.choices)&&q.choices.length===4&&q.choices.every(x=>typeof x==='string'&&x.trim())&&Number.isInteger(q.correct_index)&&q.correct_index>=0&&q.correct_index<=3);
+    if(!valid)throw Error('Each question needs four choices and a verified correct_index (0–3).');
+    if(!confirm('Import '+list.length+' questions? Confirm the answer keys have been reviewed.'))return;
+    const payload=list.map(q=>({topic:String(q.topic||parsed.topic||'General').slice(0,160),question:q.question,choices:q.choices,correct_index:q.correct_index,difficulty:['easy','medium','hard'].includes(q.difficulty)?q.difficulty:'medium'}));
+    const {error}=await sb.from('exam_questions').insert(payload);if(error)throw error;
+    info('Imported '+payload.length+' verified questions.');await questions();
+   }catch(e){err(e);}finally{file.value='';}
+  };
+  const list=el('div',{class:'stack'},el('div',{class:'row'},el('h3',{},'Question Bank ('+qs.length+')'),importer,file));
+  qs.forEach((q,i)=>list.append(el('article',{class:'card stack'},el('strong',{},(i+1)+'. '+q.question),el('p',{class:'muted small'},q.topic+' · '+q.difficulty),el('ol',{},q.choices.map((c,j)=>el('li',{},j===q.correct_index?c+' ✓':c))),btn(q.active?'Deactivate':'Reactivate',async()=>{try{const {error}=await sb.from('exam_questions').update({active:!q.active}).eq('id',q.id);if(error)throw error;await questions();}catch(e){err(e);}}))));
+  panel.append(editor,list);
+ }
+ async function exams(){
+  panel.replaceChildren();
+  const [qs,ex]=await Promise.all([rows('exam_questions',t=>t.select('id,topic,active').eq('active',true).limit(1000)),rows('exams',t=>t.select('*').order('created_at',{ascending:false}))]);
+  const title=input('Examination title'),count=input('Questions per attempt','number'),passing=input('Passing percentage','number'),duration=input('Minutes','number'),attempts=input('Maximum attempts','number');
+  count.value='50';passing.value='80';duration.value='60';attempts.value='1';
+  const pool=el('div',{class:'stack'},el('p',{class:'muted small'},'Select topics to include in the examination pool.'));
+  const topics=[...new Set(qs.map(q=>q.topic))];
+  const checks=topics.map(t=>{const box=el('input',{type:'checkbox',checked:true});pool.append(field(t+' ('+qs.filter(q=>q.topic===t).length+')',box));return {topic:t,box};});
+  const create=btn('Create draft examination',async()=>{
+   try{
+    const selected=qs.filter(q=>checks.some(x=>x.topic===q.topic&&x.box.checked));
+    const n=Number(count.value);if(!title.value.trim()||!Number.isInteger(n)||n<1||n>200||selected.length<n)throw Error('Enter a title and select at least '+n+' active questions.');
+    const {data,error}=await sb.from('exams').insert({title:title.value.trim(),question_count:n,passing_percent:Number(passing.value),duration_minutes:Number(duration.value),max_attempts:Number(attempts.value),active:false}).select('id').single();if(error)throw error;
+    const {error:poolError}=await sb.from('exam_pool').insert(selected.map(q=>({exam_id:data.id,question_id:q.id})));
+    if(poolError)throw Error('Exam created, but question pool failed: '+poolError.message);
+    info('Draft exam created. Assign technicians and activate it when ready.');await exams();
+   }catch(e){err(e);}
   });
-  showForms();
-  const topic = el('input', { class: 'input', type: 'text', maxlength: '160', placeholder: 'e.g. Fiber Installation and Safety', 'aria-label': 'Training topic' });
-  const count = el('input', { class: 'input', type: 'number', min: '1', max: '30', value: '10', 'aria-label': 'Number of questions' });
-  count.value = '10';
-  const material = el('textarea', { class: 'input', rows: '9', maxlength: '30000', placeholder: 'Paste the training material here (100–30,000 characters). Remove employee personal data and confidential information.', 'aria-label': 'Training material' });
-  const status = el('p', { class: 'muted small', role: 'status' });
-  const results = el('div', { class: 'stack' });
-  const generate = el('button', { class: 'btn btn--primary', type: 'button' }, 'Generate draft questions');
-  const note = el('p', { class: 'muted small' }, 'AI output is a draft. Check all answers against approved AHBA training materials. This tool does not publish, schedule, or assign an examination.');
-  generate.addEventListener('click', async () => {
-    if (!count.value.trim()) count.value = '10';
-    const title = topic.value.trim(), text = material.value.trim(), n = Number(count.value);
-    if (!title || text.length < 100 || text.length > 30000 || !Number.isInteger(n) || n < 1 || n > 30) {
-      status.textContent = !title ? 'Enter a training topic.' : text.length < 100 ? 'Training content needs at least 100 characters.' : text.length > 30000 ? 'Training content exceeds 30,000 characters.' : 'Choose a question count from 1 to 30.';
-      return;
-    }
-    generate.disabled = true; status.textContent = 'Generating questions with Gemini…'; results.replaceChildren();
-    try {
-      const { data, error } = await ctx.sb.functions.invoke('generate-training-exam', {
-        body: { topic: title, material: text, count: n },
-      });
-      if (error) {
-        let detail = '';
-        try { const payload = await error.context?.clone?.().json(); detail = String(payload?.error || ''); } catch {}
-        const httpStatus = error.context?.status;
-        throw new Error(detail || (httpStatus ? `Exam service returned HTTP ${httpStatus}.` : error.message || 'Exam service unavailable.'));
-      }
-      if (!Array.isArray(data?.questions)) throw new Error(data?.error || 'No questions returned.');
-      const questions = data.questions;
-      const exportBtn = el('button', { class: 'btn', type: 'button' }, 'Export draft JSON');
-      exportBtn.addEventListener('click', () => {
-        const blob = new Blob([JSON.stringify({ status: 'draft', topic: title, questions }, null, 2)], { type: 'application/json' });
-        const href = URL.createObjectURL(blob);
-        const a = el('a', { href, download: 'ahba-exam-draft.json' });
-        document.body.append(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(href), 1000);
-      });
-      results.append(el('div', { class: 'row' }, el('strong', {}, `${questions.length} draft questions`), exportBtn));
-      questions.forEach((q, i) => {
-        const choices = Array.isArray(q.choices) ? q.choices : [];
-        results.append(el('article', { class: 'card stack' },
-          el('div', { class: 'row' }, el('strong', {}, `${i + 1}. ${q.question || ''}`),
-            el('span', { class: 'badge' }, q.difficulty || 'Unrated')),
-          el('ol', {}, choices.map((choice, index) =>
-            el('li', {}, index === q.correct_index ? el('strong', {}, choice + ' ✓') : choice))),
-          el('p', { class: 'small muted' }, `Explanation: ${q.explanation || 'Not provided'}`)));
-      });
-      status.textContent = 'Draft generated. Review every question before using it in an assessment.';
-    } catch (e) {
-      console.error('Gemini question generation', e);
-      const message = String(e?.message || 'Unknown generation error').slice(0, 260);
-      status.textContent = 'Generation failed: ' + message;
-      ctx.toast?.(message, 'error');
-    } finally { generate.disabled = false; }
+  panel.append(el('div',{class:'card stack'},el('h3',{},'Create examination'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create));
+  const listing=el('div',{class:'stack'},el('h3',{},'Saved examinations'));
+  ex.forEach(e=>{
+   const user=input('Employee Supabase auth user UUID');
+   const assign=btn('Assign technician',async()=>{try{const id=user.value.trim();if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('Enter the technician auth user UUID.');const {error}=await sb.from('exam_assignments').upsert({exam_id:e.id,user_id:id});if(error)throw error;info('Technician assigned.');}catch(x){err(x);}});
+   const toggle=btn(e.active?'Pause examination':'Activate examination',async()=>{try{const {error}=await sb.from('exams').update({active:!e.active}).eq('id',e.id);if(error)throw error;await exams();}catch(x){err(x);}});
+   listing.append(el('div',{class:'card stack'},el('strong',{},e.title),el('p',{class:'muted small'},e.question_count+' questions · '+e.passing_percent+'% passing · '+e.duration_minutes+' min · '+(e.active?'Active':'Draft')),field('Assign by auth user ID',user),el('div',{class:'row'},assign,toggle)));
   });
-  root.append(el('div', { class: 'stack exam-workspace' },
-    el('div', { class: 'card stack exam-workspace__form' },
-      el('div', { class: 'exam-workspace__import-panel' },
-        el('div', { class: 'exam-workspace__import-choice' }, el('strong', {}, 'Upload an existing exam'), el('p', { class: 'muted small' }, 'PDF · Word · Excel · JSON · TXT · CSV'), importBtn, importInput),
-        el('div', { class: 'exam-workspace__import-choice' }, el('strong', {}, 'Use a Google Form'), el('p', { class: 'muted small' }, 'Save a shortcut to your existing exam (on this browser).'), formUrl, saveForm, formInfo)), importInfo,
-      el('div', { class: 'exam-workspace__heading' }, el('div', {}, el('span', { class: 'exam-workspace__eyebrow' }, 'QUESTION BUILDER'), el('h3', {}, 'Generate an assessment'), el('p', { class: 'muted small' }, 'Turn approved training materials into a reviewed question bank.'))),
-      el('div', { class: 'exam-workspace__fields' }, el('label', { class: 'stack small' }, 'Training topic', topic), el('label', { class: 'stack small' }, 'Questions (1–30)', count)),
-      el('label', { class: 'stack small' }, 'Training content', material),
-      el('div', { class: 'exam-workspace__actions' }, note, generate), status),
-    results));
-}
-
-async function loadScript(url, globalName) {
-  if (window[globalName]) return window[globalName];
-  await new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = url; script.onload = resolve; script.onerror = () => reject(new Error('Document reader could not load. Check internet access.'));
-    document.head.append(script);
-  });
-  if (!window[globalName]) throw new Error('Document reader unavailable.');
-  return window[globalName];
-}
-async function readExamFile(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (['json','txt','csv'].includes(ext)) return file.text();
-  if (ext === 'pdf') {
-    const pdfjs = await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', 'pdfjsLib');
-    pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-    const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer(), disableWorker: true }).promise;
-    if (pdf.numPages > 80) throw new Error('PDF exceeds 80 pages.');
-    const pages = [];
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const text = await page.getTextContent();
-      pages.push(text.items.map((item) => item.str || '').join(' '));
-    }
-    const output = pages.join('\n');
-    if (output.trim().length < 100) throw new Error('This PDF has no extractable text. Please use a text-based PDF.');
-    return output;
+  panel.append(listing);
+ }
+ async function take(){
+  panel.replaceChildren();
+  const assigned=await rows('exam_assignments',t=>t.select('exam_id,exams(id,title,question_count,duration_minutes,active)').limit(100));
+  for(const x of assigned){
+   const e=x.exams;if(!e?.active)continue;
+   panel.append(el('div',{class:'card stack'},el('strong',{},e.title),el('p',{class:'muted small'},e.question_count+' questions · '+e.duration_minutes+' minutes'),btn('Start / Resume',async()=>{
+    try{
+     const {data,error}=await sb.rpc('exam_start',{p_exam_id:e.id});if(error)throw error;
+     const answers={},area=el('div',{class:'stack'}),deadline=new Date(data.deadline).getTime();
+     const timer=el('p',{class:'muted small'});let done=false;
+     const submit=async()=>{if(done)return;done=true;clearInterval(interval);
+      try{const {data:result,error:failure}=await sb.rpc('exam_submit',{p_attempt_id:data.attempt_id,p_answers:answers});if(failure)throw failure;panel.replaceChildren(el('div',{class:'card'},'Score: '+result.score+'/'+result.total+' — '+(result.passed?'PASSED':'FAILED')));}
+      catch(z){done=false;err(z);}
+     };
+     data.questions.forEach(q=>{
+      const card=el('div',{class:'card stack'},el('strong',{},q.position+'. '+q.question));
+      q.choices.forEach((choice,i)=>{const radio=el('input',{type:'radio',name:'exam-'+data.attempt_id+'-'+q.position,value:i});radio.onchange=()=>{answers[q.position]=i;};card.append(field(String.fromCharCode(65+i)+'. '+choice,radio));});
+      area.append(card);
+     });
+     const interval=setInterval(()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));timer.textContent='Remaining: '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0');if(left===0){clearInterval(interval);submit();}},1000);
+     panel.replaceChildren(timer,area,btn('Submit examination',()=>{if(confirm('Submit your examination now?'))submit();}));
+    }catch(z){err(z);}
+   })));
   }
-  if (ext === 'docx') {
-    const mammoth = await loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.9.1/mammoth.browser.min.js', 'mammoth');
-    const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-    return result.value || '';
-  }
-  if (ext === 'xlsx' || ext === 'xls') {
-    const XLSX = await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
-    const book = XLSX.read(await file.arrayBuffer(), { type: 'array' });
-    return book.SheetNames.map((name) => XLSX.utils.sheet_to_csv(book.Sheets[name])).join('\n');
-  }
-  throw new Error('Unsupported file type.');
+  if(!panel.childElementCount)panel.append(el('div',{class:'card'},'No active examinations assigned to your account.'));
+ }
+ async function results(){
+  panel.replaceChildren();
+  const r=await rows('exam_attempts',t=>t.select('exam_id,user_id,attempt_number,score,total,passed,submitted_at').order('started_at',{ascending:false}).limit(100));
+  panel.append(el('h3',{},'Recent examination attempts'),...r.map(a=>el('div',{class:'card'},(a.user_id||'')+' · '+(a.score??'Pending')+'/'+(a.total??'—')+' · '+(a.passed===null?'In progress':a.passed?'Passed':'Failed')+' · '+(a.submitted_at||''))));
+ }
+ function show(label,fn){tabs.querySelectorAll('button').forEach(b=>b.disabled=b.textContent===label);panel.replaceChildren();fn().catch(err);}
+ if(trainer){tabs.append(btn('Question Bank',()=>show('Question Bank',questions)),btn('Examinations',()=>show('Examinations',exams)),btn('Results',()=>show('Results',results)));}
+ tabs.append(btn('Take Exam',()=>show('Take Exam',take)));
+ root.append(el('div',{class:'stack exam-workspace'},tabs,status,panel));
+ if(trainer)show('Question Bank',questions);else show('Take Exam',take);
 }
