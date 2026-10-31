@@ -1,17 +1,8 @@
 import { ensureCss } from '../utils/styles.js';
 import { el } from '../utils/dom.js';
-import { renderExamGenerator } from './training-exam-generator.js?v=20261030error2';
-
+import { renderExamGenerator } from './training-exam-generator.js?v=20261031exam1';
 export function render(root, ctx) {
-  ensureCss('css/exam-workspace.css?v=20261030pdf1');
-  root.append(
-    el('header', { class: 'page-head' },
-      el('div', {},
-        el('h2', {}, 'AI Exam Generator'),
-        el('p', { class: 'muted small' }, 'Create trainer-reviewed exam questions with Gemini AI.'))),
-    el('div', { class: 'card', style: 'border-left:4px solid #b49a50' },
-      el('strong', {}, 'Draft generation workspace'),
-      el('p', { class: 'muted small', style: 'margin:6px 0 0' },
-        'Upload documents, save Google Forms links, or generate questions from approved training content. Review all drafts before use. Scheduling and employee exam deployment are not yet available.')));
-  renderExamGenerator(root, ctx);
+ ensureCss('css/exam-workspace.css?v=20261030pdf1');
+ root.append(el('header',{class:'page-head'},el('div',{},el('h2',{},ctx.role==='technician'?'My Examinations':'Examination Management'),el('p',{class:'muted small'},'Question bank, secure randomized assessments, assignments and grading — no AI required.'))));
+ renderExamGenerator(root,ctx);
 }
