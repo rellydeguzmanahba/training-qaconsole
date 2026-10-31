@@ -30,7 +30,18 @@ export function renderExamGenerator(root, ctx) {
   const file=el('input',{type:'file',accept:'.pdf,.xlsx,.xls,.csv,.json,application/pdf,application/json,text/csv',style:'display:none'});
   const importer=el('button',{class:'btn btn--primary exam-import__button',type:'button',onclick:()=>file.click(),'aria-label':'Upload examination PDF or Excel file'},el('span',{class:'exam-import__icon','aria-hidden':'true'},'↑'),el('span',{},'Upload Examination'),el('span',{class:'exam-import__arrow','aria-hidden':'true'},'→'));
   const importCard=el('section',{class:'card exam-import__card stack'},el('div',{class:'exam-import__header'},el('div',{},el('span',{class:'exam-import__eyebrow'},'IMPORT EXAMINATION'),el('h3',{},'Upload an existing examination'),el('p',{class:'muted small'},'Bring your existing questions into the Question Bank. No AI generation.')),el('span',{class:'exam-import__badge'},'PDF · XLSX · XLS · CSV')),el('div',{class:'exam-import__actions'},importer,el('span',{class:'muted small'},'Maximum file size: 8 MB')),file);
-  const review=el('div',{class:'stack'});
+  const review=el('div',{class:'stack exam-review__questions'});
+  const modalStatus=el('p',{class:'muted small',role:'status'});
+  const closeModal=el('button',{class:'btn',type:'button'},'Close');
+  const modal=el('dialog',{class:'exam-review__dialog','aria-label':'Review imported examination'});
+  const modalTitle=el('h2',{},'Review imported examination');
+  const modalHeader=el('div',{class:'exam-review__header'},el('div',{},el('span',{class:'exam-import__eyebrow'},'IMPORT REVIEW'),modalTitle,el('p',{class:'muted small'},'Verify all questions and correct answers before saving.')),closeModal);
+  const modalBody=el('div',{class:'exam-review__body'},modalStatus,review);
+  modal.append(modalHeader,modalBody);
+  const openModal=()=>{if(!modal.open)modal.showModal();};
+  closeModal.addEventListener('click',()=>modal.close());
+  modal.addEventListener('click',event=>{if(event.target===modal)modal.close();});
+  modal.addEventListener('close',()=>importer.focus());
   const importHelp=el('p',{class:'muted small'},'Import existing questions without AI. Review each question and set its correct answer before saving. Scanned PDFs require a text-based copy.');
   const loadScript=async(url,key)=>{
     if(window[key])return window[key];
@@ -89,7 +100,7 @@ export function renderExamGenerator(root, ctx) {
   file.onchange=async()=>{
     try{
       const f=file.files?.[0];if(!f)return;if(f.size>8*1024*1024)throw Error('File exceeds 8 MB.');
-      info('Reading '+f.name+'…');review.replaceChildren();
+      info('Reading '+f.name+'…');modalStatus.textContent='Reading '+f.name+'…';review.replaceChildren();
       const imported=await readFile(f);
       if(!Array.isArray(imported)||!imported.length||imported.length>500)throw Error('No complete four-choice questions found. For PDF, use numbered questions with A–D choices. Check the original formatting.');
       const drafts=imported.map(q=>({question:String(q.question||''),choices:Array.isArray(q.choices)?q.choices.map(String).slice(0,4):[],topic:String(q.topic||'General'),difficulty:['easy','medium','hard'].includes(q.difficulty)?q.difficulty:'medium',correct_index:Number.isInteger(q.correct_index)&&q.correct_index>=0&&q.correct_index<=3?q.correct_index:null}));
@@ -108,17 +119,20 @@ export function renderExamGenerator(root, ctx) {
           if(bad>=0)throw Error('Review question '+(bad+1)+': all choices and a verified correct answer are required.');
           if(!confirm('Save '+payload.length+' reviewed questions to the Question Bank?'))return;
           const {error}=await sb.from('exam_questions').insert(payload);if(error)throw error;
-          info('Saved '+payload.length+' questions.');await questions();
-        }catch(e){err(e);}
+          info('Saved '+payload.length+' questions.');modal.close();await questions();
+        }catch(e){modalStatus.textContent='Error: '+String(e.message||e);err(e);}
       });
       review.append(el('div',{class:'card stack'},el('strong',{},'Review '+editors.length+' imported questions'),el('p',{class:'muted small'},'Nothing is saved until you verify every answer and click Save.'),save),...editors.map(x=>x.card));
-      info('Imported '+editors.length+' questions from '+f.name+'. Verify every question and answer.');
+      modalTitle.textContent='Review '+editors.length+' imported questions';
+      modalStatus.textContent=f.name+' · '+editors.length+' questions extracted. Verify every answer before saving.';
+      info('Imported '+editors.length+' questions from '+f.name+'. Review in the popup.');
+      openModal();
     }catch(e){err(e);}finally{file.value='';}
   };
-  const list=el('div',{class:'stack'},el('div',{class:'row'},el('h3',{},'Question Bank ('+qs.length+')')),review);
+  const list=el('div',{class:'stack'},el('div',{class:'row'},el('h3',{},'Question Bank ('+qs.length+')')));
   importCard.append(importHelp);
   qs.forEach((q,i)=>list.append(el('article',{class:'card stack'},el('strong',{},(i+1)+'. '+q.question),el('p',{class:'muted small'},q.topic+' · '+q.difficulty),el('ol',{},q.choices.map((c,j)=>el('li',{},j===q.correct_index?c+' ✓':c))),btn(q.active?'Deactivate':'Reactivate',async()=>{try{const {error}=await sb.from('exam_questions').update({active:!q.active}).eq('id',q.id);if(error)throw error;await questions();}catch(e){err(e);}}))));
-  panel.append(importCard,review,editor,list);
+  panel.append(importCard,modal,editor,list);
  }
  async function exams(){
   panel.replaceChildren();
