@@ -110,7 +110,7 @@ export function renderExamGenerator(root, ctx) {
         const answer=el('select',{class:'input'},el('option',{value:''},'Select verified correct answer'),...[0,1,2,3].map(j=>el('option',{value:j},String.fromCharCode(65+j))));
         answer.value=q.correct_index===null?'':String(q.correct_index);
         const category=input('Category');category.value=q.topic;
-        return {text,opts,answer,category,card:el('article',{class:'card stack'},el('strong',{},'Question '+(i+1)),field('Question',text),...opts.map((o,j)=>field('Choice '+String.fromCharCode(65+j),o)),field('Correct answer (required)',answer),field('Topic',category))};
+        return {text,opts,answer,category,card:el('article',{class:'card stack exam-review__question-card'},el('div',{class:'exam-review__question-heading'},el('span',{class:'exam-review__question-number'},'QUESTION '+String(i+1).padStart(2,'0')),el('span',{class:'exam-review__question-tag'},'Review required')),el('div',{class:'exam-review__question-content'},field('Question text',text),el('div',{class:'exam-review__choices'},...opts.map((o,j)=>field('Choice '+String.fromCharCode(65+j),o))),el('div',{class:'exam-review__answer-area'},field('✓ Correct answer (required)',answer),field('Topic / Category',category))))};
       });
       const save=btn('Save '+editors.length+' reviewed questions',async()=>{
         try{
