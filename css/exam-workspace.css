@@ -138,3 +138,32 @@
 .exam-bank__folder-actions{padding:12px 16px;border-top:1px solid #e3eee5}
 .exam-bank__folder-actions .muted{margin:0}
 @media(max-width:600px){.exam-bank__folder>summary{padding:13px;gap:9px}.exam-bank__folder-count{font-size:10px}.exam-bank__folder-body{padding:9px}}
+
+
+/* AHBA Examination Workspace redesign */
+.exam-hub{gap:18px!important}
+.exam-hub__intro{padding:20px 24px;border-radius:16px;background:linear-gradient(115deg,#0e3c2d,#176447 78%,#277953);color:#fff;border-bottom:4px solid #d6b765;box-shadow:0 8px 20px rgba(11,55,34,.12)}
+.exam-hub__eyebrow{font-size:10px;font-weight:850;letter-spacing:1.5px;color:#f1d588}
+.exam-hub__intro h3{margin:7px 0 6px;font-size:clamp(21px,2vw,28px);color:#fff;letter-spacing:-.4px}
+.exam-hub__intro p{margin:0;color:#dcece2!important}
+.exam-hub__metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.exam-hub__metric{text-align:left;display:flex;flex-direction:column;gap:5px;padding:16px 18px;background:#fff;border:1px solid #dce8df;border-radius:14px;cursor:pointer;box-shadow:0 3px 12px rgba(16,57,37,.04);transition:transform .15s,box-shadow .15s}
+.exam-hub__metric:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(16,57,37,.1);border-color:#92b99c}
+.exam-hub__metric-label{font-size:12px;font-weight:700;color:#587568}
+.exam-hub__metric strong{font-size:29px;line-height:1.1;color:#174f35}
+.exam-hub__metric-link{font-size:11px;color:#367c53;font-weight:700}
+.exam-hub__tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:6px;border:1px solid #d8e6db;border-radius:15px;background:#e8f0ea}
+.exam-hub__tab{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid transparent;border-radius:11px;background:transparent;text-align:left;cursor:pointer;color:#345b45;min-width:0}
+.exam-hub__tab:hover{background:rgba(255,255,255,.7)}
+.exam-hub__tab.is-active{background:#fff;border-color:#b7d4c0;box-shadow:0 4px 12px rgba(13,63,39,.09);color:#124a30}
+.exam-hub__tab-icon{display:grid;place-items:center;flex:none;width:35px;height:35px;border-radius:9px;background:#d3e5d8;color:#195c3b;font-size:18px;font-weight:850}
+.exam-hub__tab.is-active .exam-hub__tab-icon{background:#196a44;color:#fff}
+.exam-hub__tab-label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.exam-hub__tab-label strong{font-size:13px;line-height:1.2}
+.exam-hub__tab-label small{font-size:10px;color:#6b8475;line-height:1.2}
+.exam-hub__section-head{padding:4px 2px 0}
+.exam-hub__section-head h3{margin:0 0 4px;font-size:20px;color:#193f2e}
+.exam-hub__section-head p{margin:0}
+.exam-hub__loading{padding:25px;border:1px solid #dbe9de;border-radius:13px;background:#fff;color:#52725e}
+@media(max-width:900px){.exam-hub__metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.exam-hub__tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.exam-hub__intro{padding:18px}.exam-hub__metrics{gap:8px}.exam-hub__metric{padding:12px}.exam-hub__metric strong{font-size:24px}.exam-hub__tabs{gap:5px}.exam-hub__tab{padding:8px;gap:7px}.exam-hub__tab-icon{width:28px;height:28px;font-size:15px}.exam-hub__tab-label strong{font-size:11px}.exam-hub__tab-label small{font-size:9px}}
