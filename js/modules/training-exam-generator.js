@@ -27,22 +27,94 @@ export function renderExamGenerator(root, ctx) {
    }catch(e){err(e);}
   });
   const editor=el('div',{class:'card stack'},el('h3',{},'Add a question'),field('Topic',topic),field('Question',question),...choices.map((c,i)=>field('Answer '+String.fromCharCode(65+i),c)),field('Answer key',correct),field('Difficulty',difficulty),save);
-  const file=el('input',{type:'file',accept:'.json,application/json'});
-  const importer=btn('Import JSON',()=>file.click());
-  file.onchange=async()=>{
-   try{
-    const f=file.files?.[0];if(!f)return;if(f.size>3e6)throw Error('File exceeds 3 MB.');
-    const parsed=JSON.parse(await f.text()),list=Array.isArray(parsed)?parsed:parsed.questions;
-    if(!Array.isArray(list)||list.length<1||list.length>500)throw Error('Expected 1–500 questions.');
-    const valid=list.every(q=>typeof q.question==='string'&&q.question.trim()&&Array.isArray(q.choices)&&q.choices.length===4&&q.choices.every(x=>typeof x==='string'&&x.trim())&&Number.isInteger(q.correct_index)&&q.correct_index>=0&&q.correct_index<=3);
-    if(!valid)throw Error('Each question needs four choices and a verified correct_index (0–3).');
-    if(!confirm('Import '+list.length+' questions? Confirm the answer keys have been reviewed.'))return;
-    const payload=list.map(q=>({topic:String(q.topic||parsed.topic||'General').slice(0,160),question:q.question,choices:q.choices,correct_index:q.correct_index,difficulty:['easy','medium','hard'].includes(q.difficulty)?q.difficulty:'medium'}));
-    const {error}=await sb.from('exam_questions').insert(payload);if(error)throw error;
-    info('Imported '+payload.length+' verified questions.');await questions();
-   }catch(e){err(e);}finally{file.value='';}
+  const file=el('input',{type:'file',accept:'.pdf,.xlsx,.xls,.csv,.json,application/pdf,application/json,text/csv',style:'display:none'});
+  const importer=btn('Import PDF / Excel / CSV',()=>file.click());
+  const review=el('div',{class:'stack'});
+  const importHelp=el('p',{class:'muted small'},'Import existing questions without AI. Review each question and set its correct answer before saving. Scanned PDFs require a text-based copy.');
+  const loadScript=async(url,key)=>{
+    if(window[key])return window[key];
+    await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=url;s.onload=resolve;s.onerror=()=>reject(Error('Could not load document reader.'));document.head.append(s);});
+    if(!window[key])throw Error('Document reader unavailable.');return window[key];
   };
-  const list=el('div',{class:'stack'},el('div',{class:'row'},el('h3',{},'Question Bank ('+qs.length+')'),importer,file));
+  const parseRows=(rows)=>{
+    const clean=s=>String(s??'').trim();
+    const norm=s=>clean(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+    const headers=rows[0].map(norm);
+    const index=(...names)=>headers.findIndex(h=>names.includes(h));
+    const qi=index('question','questiontext','tanong'),a=index('a','optiona','choicea','answera'),b=index('b','optionb','choiceb','answerb'),c=index('c','optionc','choicec','answerc'),d=index('d','optiond','choiced','answerd'),key=index('correctanswer','correct','answerkey','correctindex'),topic=index('topic','category'),diff=index('difficulty');
+    if([qi,a,b,c,d].some(i=>i<0))throw Error('Spreadsheet headers required: Question, A, B, C, D. Optional: Correct Answer, Topic, Difficulty.');
+    return rows.slice(1).filter(r=>clean(r[qi])).map(r=>{
+      const raw=clean(r[key]),letters=['A','B','C','D'];
+      let answer=/^[A-D]$/i.test(raw)?letters.indexOf(raw.toUpperCase()):/^[0-3]$/.test(raw)?Number(raw):null;
+      return {question:clean(r[qi]),choices:[a,b,c,d].map(i=>clean(r[i])),correct_index:answer,topic:clean(r[topic])||'General',difficulty:clean(r[diff])||'medium'};
+    });
+  };
+  const parsePdf=(lines)=>{
+    const questions=[];let q=null;let choice=-1;
+    const flush=()=>{if(q&&q.question&&q.choices.every(Boolean))questions.push(q);q=null;choice=-1;};
+    for(const original of lines){
+      const line=original.trim();if(!line)continue;
+      const start=line.match(/^(?:Question\s*)?(\d{1,3})\s*[.)-]\s+(.+)/i);
+      const option=line.match(/^([A-D])\s*[.)-]\s+(.+)/i);
+      if(start){flush();q={question:start[2],choices:['','','',''],correct_index:null,topic:'Imported PDF',difficulty:'medium'};}
+      else if(option&&q){choice=option[1].toUpperCase().charCodeAt(0)-65;q.choices[choice]=option[2];}
+      else if(q){if(choice>=0)q.choices[choice]+=' '+line;else q.question+=' '+line;}
+    }
+    flush();return questions;
+  };
+  const readFile=async f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    if(ext==='json'){const p=JSON.parse(await f.text());return Array.isArray(p)?p:p.questions;}
+    if(['xlsx','xls','csv'].includes(ext)){
+      const XLSX=await loadScript('https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js','XLSX');
+      const book=XLSX.read(await f.arrayBuffer(),{type:'array'});return parseRows(XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{header:1,defval:''}));
+    }
+    if(ext==='pdf'){
+      const pdfjs=await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js','pdfjsLib');
+      pdfjs.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+      const pdf=await pdfjs.getDocument({data:await f.arrayBuffer(),disableWorker:true}).promise;
+      if(pdf.numPages>80)throw Error('PDF exceeds 80 pages.');
+      const lines=[];
+      for(let p=1;p<=pdf.numPages;p++){
+        const page=await pdf.getPage(p),data=await page.getTextContent();
+        const groups=new Map();
+        for(const item of data.items){const y=Math.round(item.transform?.[5]||0);if(!groups.has(y))groups.set(y,[]);groups.get(y).push(item);}
+        for(const [,items] of [...groups].sort((a,b)=>b[0]-a[0]))lines.push(items.sort((a,b)=>(a.transform?.[4]||0)-(b.transform?.[4]||0)).map(x=>x.str).join(' ').trim());
+      }
+      return parsePdf(lines);
+    }
+    throw Error('Unsupported file type.');
+  };
+  file.onchange=async()=>{
+    try{
+      const f=file.files?.[0];if(!f)return;if(f.size>8*1024*1024)throw Error('File exceeds 8 MB.');
+      info('Reading '+f.name+'…');review.replaceChildren();
+      const imported=await readFile(f);
+      if(!Array.isArray(imported)||!imported.length||imported.length>500)throw Error('No complete four-choice questions found. For PDF, use numbered questions with A–D choices. Check the original formatting.');
+      const drafts=imported.map(q=>({question:String(q.question||''),choices:Array.isArray(q.choices)?q.choices.map(String).slice(0,4):[],topic:String(q.topic||'General'),difficulty:['easy','medium','hard'].includes(q.difficulty)?q.difficulty:'medium',correct_index:Number.isInteger(q.correct_index)&&q.correct_index>=0&&q.correct_index<=3?q.correct_index:null}));
+      const editors=drafts.map((q,i)=>{
+        const text=el('textarea',{class:'input',rows:'2'});text.value=q.question;
+        const opts=Array.from({length:4},(_,j)=>{const v=input('Choice '+String.fromCharCode(65+j));v.value=q.choices[j]||'';return v;});
+        const answer=el('select',{class:'input'},el('option',{value:''},'Select verified correct answer'),...[0,1,2,3].map(j=>el('option',{value:j},String.fromCharCode(65+j))));
+        answer.value=q.correct_index===null?'':String(q.correct_index);
+        const category=input('Category');category.value=q.topic;
+        return {text,opts,answer,category,card:el('article',{class:'card stack'},el('strong',{},'Question '+(i+1)),field('Question',text),...opts.map((o,j)=>field('Choice '+String.fromCharCode(65+j),o)),field('Correct answer (required)',answer),field('Topic',category))};
+      });
+      const save=btn('Save '+editors.length+' reviewed questions',async()=>{
+        try{
+          const payload=editors.map(x=>({question:x.text.value.trim(),choices:x.opts.map(o=>o.value.trim()),correct_index:x.answer.value===''?null:Number(x.answer.value),topic:x.category.value.trim()||'General',difficulty:'medium'}));
+          const bad=payload.findIndex(q=>!q.question||q.choices.length!==4||q.choices.some(x=>!x)||q.correct_index===null);
+          if(bad>=0)throw Error('Review question '+(bad+1)+': all choices and a verified correct answer are required.');
+          if(!confirm('Save '+payload.length+' reviewed questions to the Question Bank?'))return;
+          const {error}=await sb.from('exam_questions').insert(payload);if(error)throw error;
+          info('Saved '+payload.length+' questions.');await questions();
+        }catch(e){err(e);}
+      });
+      review.append(el('div',{class:'card stack'},el('strong',{},'Review '+editors.length+' imported questions'),el('p',{class:'muted small'},'Nothing is saved until you verify every answer and click Save.'),save),...editors.map(x=>x.card));
+      info('Imported '+editors.length+' questions from '+f.name+'. Verify every question and answer.');
+    }catch(e){err(e);}finally{file.value='';}
+  };
+  const list=el('div',{class:'stack'},el('div',{class:'row'},el('h3',{},'Question Bank ('+qs.length+')'),importer,file),importHelp,review);
   qs.forEach((q,i)=>list.append(el('article',{class:'card stack'},el('strong',{},(i+1)+'. '+q.question),el('p',{class:'muted small'},q.topic+' · '+q.difficulty),el('ol',{},q.choices.map((c,j)=>el('li',{},j===q.correct_index?c+' ✓':c))),btn(q.active?'Deactivate':'Reactivate',async()=>{try{const {error}=await sb.from('exam_questions').update({active:!q.active}).eq('id',q.id);if(error)throw error;await questions();}catch(e){err(e);}}))));
   panel.append(editor,list);
  }
