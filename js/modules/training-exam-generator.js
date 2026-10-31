@@ -14,7 +14,7 @@ export function renderExamGenerator(root, ctx) {
  async function rows(table,query){const {data,error}=await query(sb.from(table));if(error)throw error;return data||[];}
  async function questions(){
   panel.replaceChildren();
-  const qs=await rows('exam_questions',t=>t.select('*').order('created_at',{ascending:false}).limit(500));
+  const [qs,linked,examRecords]=await Promise.all([rows('exam_questions',t=>t.select('*').order('created_at',{ascending:false}).limit(1000)),rows('exam_pool',t=>t.select('exam_id,question_id').limit(10000)),rows('exams',t=>t.select('id,title,created_at').order('created_at',{ascending:false}).limit(1000))]);
   const topic=input('Topic / Category'),question=el('textarea',{class:'input',rows:'3',placeholder:'Question (English / Filipino)'});
   const choices=Array.from({length:4},(_,i)=>input('Choice '+String.fromCharCode(65+i)));
   const correct=el('select',{class:'input'},...[0,1,2,3].map(i=>el('option',{value:i},'Correct answer: '+String.fromCharCode(65+i))));
@@ -155,10 +155,33 @@ export function renderExamGenerator(root, ctx) {
       openModal();
     }catch(e){err(e);}finally{file.value='';}
   };
-  const list=el('div',{class:'stack'},el('div',{class:'row'},el('h3',{},'Question Bank ('+qs.length+')')));
-  importCard.append(importHelp);
-  qs.forEach((q,i)=>list.append(el('article',{class:'card stack'},el('strong',{},(i+1)+'. '+q.question),el('p',{class:'muted small'},q.topic+' · '+q.difficulty),el('ol',{},q.choices.map((c,j)=>el('li',{},j===q.correct_index?c+' ✓':c))),btn(q.active?'Deactivate':'Reactivate',async()=>{try{const {error}=await sb.from('exam_questions').update({active:!q.active}).eq('id',q.id);if(error)throw error;await questions();}catch(e){err(e);}}))));
-  panel.append(importCard,modal,editor,list);
+  const list=el('section',{class:'card stack exam-bank'});
+  const search=input('Search questions or answers','search');
+  search.setAttribute('aria-label','Search Question Bank');
+  const group=el('select',{class:'input','aria-label':'Filter by imported examination'},el('option',{value:'all'},'All examination batches'),...examRecords.map(e=>el('option',{value:e.id},e.title)));
+  const counter=el('p',{class:'muted small'});
+  const items=el('div',{class:'stack exam-bank__items'});
+  const links=new Map();
+  linked.forEach(x=>{if(!links.has(x.question_id))links.set(x.question_id,new Set());links.get(x.question_id).add(x.exam_id);});
+  const draw=()=>{
+    const term=search.value.trim().toLowerCase(),selected=group.value;
+    const visible=qs.filter(q=>(selected==='all'||selected==='unassigned'?!links.has(q.id):links.get(q.id)?.has(selected))&&(!term||[q.question,q.topic,...q.choices].some(v=>String(v).toLowerCase().includes(term))));
+    counter.textContent=visible.length+' of '+qs.length+' questions shown';
+    items.replaceChildren();
+    if(!visible.length){items.append(el('p',{class:'muted'},'No matching questions. Try another batch or search term.'));return;}
+    visible.forEach((q,i)=>{
+      const details=el('details',{class:'exam-bank__question'},
+        el('summary',{},el('span',{class:'exam-bank__index'},String(i+1).padStart(2,'0')),el('span',{class:'exam-bank__question-text'},q.question),el('span',{class:'exam-bank__topic'},q.topic)),
+        el('div',{class:'exam-bank__question-body'},el('ol',{},q.choices.map((c,j)=>el('li',{class:j===q.correct_index?'exam-bank__correct':''},c+(j===q.correct_index?' ✓':'')))),el('div',{class:'row'},btn(q.active?'Deactivate question':'Reactivate question',async()=>{try{const {error}=await sb.from('exam_questions').update({active:!q.active}).eq('id',q.id);if(error)throw error;await questions();}catch(e){err(e);}}))));
+      items.append(details);
+    });
+  };
+  group.append(el('option',{value:'unassigned'},'Unassigned / manually added questions'));
+  search.addEventListener('input',draw);group.addEventListener('change',draw);
+  list.append(el('div',{class:'exam-bank__heading'},el('div',{},el('h3',{},'Browse Question Bank'),el('p',{class:'muted small'},'Questions are grouped by the examination draft created from each upload. Expand a question to see its answers.'))),el('div',{class:'exam-bank__filters'},search,group),counter,items);
+  draw();
+  const manual=el('details',{class:'card exam-manual'},el('summary',{},'＋ Add a question manually'),editor);
+  panel.append(importCard,modal,list,manual);
  }
  async function exams(){
   panel.replaceChildren();
@@ -178,7 +201,7 @@ export function renderExamGenerator(root, ctx) {
     info('Draft exam created. Assign technicians and activate it when ready.');await exams();
    }catch(e){err(e);}
   });
-  panel.append(el('div',{class:'card stack'},el('h3',{},'Optional: Build examination from existing Question Bank'),el('p',{class:'muted small'},'Only use this if you want to combine previously saved questions. Uploaded files already create a draft automatically.'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create));
+  const manualDraft=el('details',{class:'card exam-manual'},el('summary',{},'＋ Advanced: Build an examination from existing questions'),el('div',{class:'stack'},el('h3',{},'Optional: Build examination from existing Question Bank'),el('p',{class:'muted small'},'Only use this if you want to combine previously saved questions. Uploaded files already create a draft automatically.'),field('Title',title),field('Questions per attempt',count),field('Passing score (%)',passing),field('Duration (minutes)',duration),field('Allowed attempts',attempts),pool,create)));
   const listing=el('div',{class:'stack'},el('h3',{},'Saved examinations'));
   let employees=[];
   try{employees=await rows('profiles',t=>t.select('user_id,full_name,role,active').eq('role','technician').eq('active',true).order('full_name').limit(1000));}
@@ -218,7 +241,7 @@ export function renderExamGenerator(root, ctx) {
     el('div',{class:'row'},assign,toggle,...(e.active?[]:[remove])));
    listing.append(card);
   });
-  panel.append(listing);
+  panel.append(listing,manualDraft);
  }
  async function take(){
   panel.replaceChildren();
