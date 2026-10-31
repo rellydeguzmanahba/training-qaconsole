@@ -37,7 +37,8 @@ export function renderExamGenerator(root, ctx) {
   const modalTitle=el('h2',{},'Review imported examination');
   const modalHeader=el('div',{class:'exam-review__header'},el('div',{},el('span',{class:'exam-import__eyebrow'},'IMPORT REVIEW'),modalTitle,el('p',{class:'muted small'},'Verify all questions and correct answers before saving.')),closeModal);
   const modalBody=el('div',{class:'exam-review__body'},modalStatus,review);
-  modal.append(modalHeader,modalBody);
+  const modalFooter=el('div',{class:'exam-review__footer'});
+  modal.append(modalHeader,modalBody,modalFooter);
   const openModal=()=>{if(!modal.open)modal.showModal();};
   closeModal.addEventListener('click',()=>modal.close());
   modal.addEventListener('click',event=>{if(event.target===modal)modal.close();});
@@ -116,13 +117,17 @@ export function renderExamGenerator(root, ctx) {
         try{
           const payload=editors.map(x=>({question:x.text.value.trim(),choices:x.opts.map(o=>o.value.trim()),correct_index:x.answer.value===''?null:Number(x.answer.value),topic:x.category.value.trim()||'General',difficulty:'medium'}));
           const bad=payload.findIndex(q=>!q.question||q.choices.length!==4||q.choices.some(x=>!x)||q.correct_index===null);
-          if(bad>=0)throw Error('Review question '+(bad+1)+': all choices and a verified correct answer are required.');
+          if(bad>=0){editors[bad].card.scrollIntoView({behavior:'smooth',block:'start'});editors[bad].card.classList.add('exam-review__invalid');editors[bad].answer.focus({preventScroll:true});throw Error('Review question '+(bad+1)+': all choices and a verified correct answer are required.');}
           if(!confirm('Save '+payload.length+' reviewed questions to the Question Bank?'))return;
           const {error}=await sb.from('exam_questions').insert(payload);if(error)throw error;
           info('Saved '+payload.length+' questions.');modal.close();await questions();
         }catch(e){modalStatus.textContent='Error: '+String(e.message||e);err(e);}
       });
-      review.append(el('div',{class:'card stack'},el('strong',{},'Review '+editors.length+' imported questions'),el('p',{class:'muted small'},'Nothing is saved until you verify every answer and click Save.'),save),...editors.map(x=>x.card));
+      save.textContent='Import '+editors.length+' Questions';
+      save.classList.add('exam-review__import-button');
+      const cancel=btn('Cancel',()=>modal.close());
+      modalFooter.replaceChildren(el('span',{class:'exam-review__footer-note'},'✓ '+editors.length+' questions ready for review'),el('div',{class:'exam-review__footer-actions'},cancel,save));
+      review.append(...editors.map(x=>x.card));
       modalTitle.textContent='Review '+editors.length+' imported questions';
       modalStatus.textContent=f.name+' · '+editors.length+' questions extracted. Verify every answer before saving.';
       info('Imported '+editors.length+' questions from '+f.name+'. Review in the popup.');
