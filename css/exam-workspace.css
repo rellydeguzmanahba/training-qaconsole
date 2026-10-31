@@ -69,3 +69,17 @@
 .exam-review__answer-area{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px;border-radius:12px;background:#fff8e8;border:1px solid #f0dba6}
 .exam-review__answer-area select{border:1px solid #d7b45e!important;background:#fff}
 @media(max-width:600px){.exam-review__choices,.exam-review__answer-area{grid-template-columns:1fr}.exam-review__question-heading{padding:12px}.exam-review__question-content{padding:12px}}
+
+
+/* Fixed popup action footer: Import is always visible, even on question 50 */
+.exam-review__dialog{display:none;flex-direction:column}
+.exam-review__dialog[open]{display:flex}
+.exam-review__header{flex:none}
+.exam-review__body{flex:1;min-height:0;max-height:none;overflow-y:auto;scroll-behavior:smooth}
+.exam-review__footer{flex:none;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 22px;border-top:2px solid #d7b35c;background:#fff;box-shadow:0 -6px 18px rgba(16,60,36,.08)}
+.exam-review__footer-note{font-size:12px;font-weight:700;color:#3b7255}
+.exam-review__footer-actions{display:flex;gap:10px;align-items:center}
+.exam-review__import-button{background:#17633e!important;color:#fff!important;border:1px solid #17633e!important;border-radius:10px!important;padding:12px 20px!important;font-weight:800!important;box-shadow:0 4px 10px rgba(23,99,62,.18)}
+.exam-review__import-button:hover{background:#104a2e!important}
+.exam-review__invalid{border:2px solid #c74632!important;box-shadow:0 0 0 3px #f9d6cd!important}
+@media(max-width:600px){.exam-review__footer{padding:10px 12px;flex-wrap:wrap}.exam-review__footer-note{width:100%}.exam-review__footer-actions{width:100%}.exam-review__footer-actions .btn{flex:1}.exam-review__import-button{padding:10px!important}}
