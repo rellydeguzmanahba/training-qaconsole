@@ -72,6 +72,8 @@ drop policy if exists "trainers manage questions" on public.exam_questions;
 create policy "trainers manage questions" on public.exam_questions for all to authenticated using (public.exam_is_trainer()) with check (public.exam_is_trainer());
 drop policy if exists "trainers manage exams" on public.exams;
 create policy "trainers manage exams" on public.exams for all to authenticated using (public.exam_is_trainer()) with check (public.exam_is_trainer());
+drop policy if exists "assigned users view exams" on public.exams;
+create policy "assigned users view exams" on public.exams for select to authenticated using (active and exists(select 1 from public.exam_assignments a where a.exam_id=id and a.user_id=auth.uid()));
 drop policy if exists "trainers manage pool" on public.exam_pool;
 create policy "trainers manage pool" on public.exam_pool for all to authenticated using (public.exam_is_trainer()) with check (public.exam_is_trainer());
 drop policy if exists "trainers manage assignments" on public.exam_assignments;
