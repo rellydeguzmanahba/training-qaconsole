@@ -83,3 +83,10 @@
 .exam-review__import-button:hover{background:#104a2e!important}
 .exam-review__invalid{border:2px solid #c74632!important;box-shadow:0 0 0 3px #f9d6cd!important}
 @media(max-width:600px){.exam-review__footer{padding:10px 12px;flex-wrap:wrap}.exam-review__footer-note{width:100%}.exam-review__footer-actions{width:100%}.exam-review__footer-actions .btn{flex:1}.exam-review__import-button{padding:10px!important}}
+
+
+.exam-review__settings{border:1px solid #cfdfd2!important;background:#f6faf6!important;padding:18px!important}
+.exam-review__settings h3{color:#185739;margin:0}
+.exam-review__settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.exam-review__settings input{width:100%;box-sizing:border-box}
+@media(max-width:600px){.exam-review__settings-grid{grid-template-columns:1fr}}
