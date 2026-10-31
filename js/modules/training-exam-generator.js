@@ -322,9 +322,60 @@ export function renderExamGenerator(root, ctx) {
   const r=await rows('exam_attempts',t=>t.select('exam_id,user_id,attempt_number,score,total,passed,submitted_at').order('started_at',{ascending:false}).limit(100));
   panel.append(el('h3',{},'Recent examination attempts'),...r.map(a=>el('div',{class:'card'},(a.user_id||'')+' · '+(a.score??'Pending')+'/'+(a.total??'—')+' · '+(a.passed===null?'In progress':a.passed?'Passed':'Failed')+' · '+(a.submitted_at||''))));
  }
- function show(label,fn){tabs.querySelectorAll('button').forEach(b=>b.disabled=b.textContent===label);panel.replaceChildren();fn().catch(err);}
- if(trainer){tabs.append(btn('Question Bank',()=>show('Question Bank',questions)),btn('Examinations',()=>show('Examinations',exams)),btn('Results',()=>show('Results',results)));}
- tabs.append(btn('Take Exam',()=>show('Take Exam',take)));
- root.append(el('div',{class:'stack exam-workspace'},tabs,status,panel));
- if(trainer)show('Question Bank',questions);else show('Take Exam',take);
+ const tabButtons=new Map();
+ const heading=el('div',{class:'exam-hub__intro'},el('div',{},el('span',{class:'exam-hub__eyebrow'},'AHBA • TRAINING & QUALITY'),el('h3',{},'Examination Workspace'),el('p',{class:'muted small'},'Upload and organize assessments, assign employees, and monitor examination results.')));
+ const summary=el('div',{class:'exam-hub__metrics'});
+ const sectionHead=el('div',{class:'exam-hub__section-head'});
+ const sectionTitle=el('h3',{},'');
+ const sectionHelp=el('p',{class:'muted small'});
+ sectionHead.append(sectionTitle,sectionHelp);
+ const descriptions={
+  'Question Bank':['Question Bank','Organize uploaded examinations into named folders. Expand a folder to review or delete questions.'],
+  'Examinations':['Manage Examinations','Manage saved drafts, assign employees by name, and activate or pause assessments.'],
+  'Results':['Examination Results','Review scores and completed examination attempts.'],
+  'Take Exam':['My Examinations','Open an assigned assessment and complete it within the allotted time.']
+ };
+ async function refreshSummary(){
+  if(!trainer)return;
+  try{
+   const [questionsCount,examRows,attemptsCount]=await Promise.all([
+    sb.from('exam_questions').select('id',{count:'exact',head:true}),
+    sb.from('exams').select('id,active').limit(1000),
+    sb.from('exam_attempts').select('id',{count:'exact',head:true})
+   ]);
+   if(questionsCount.error||examRows.error||attemptsCount.error)return;
+   const metrics=[
+    ['Questions',questionsCount.count??0,'Question Bank'],
+    ['Drafts',examRows.data.filter(e=>!e.active).length,'Examinations'],
+    ['Active exams',examRows.data.filter(e=>e.active).length,'Examinations'],
+    ['Attempts',attemptsCount.count??0,'Results']
+   ];
+   summary.replaceChildren(...metrics.map(([label,value,target])=>{
+    const card=el('button',{class:'exam-hub__metric',type:'button',onclick:()=>selectTab(target)},el('span',{class:'exam-hub__metric-label'},label),el('strong',{},String(value)),el('span',{class:'exam-hub__metric-link'},'View details →'));
+    return card;
+   }));
+  }catch(e){/* Summary is optional; keep the workspace usable. */}
+ }
+ function selectTab(label){
+  const fn={ 'Question Bank':questions,'Examinations':exams,'Results':results,'Take Exam':take }[label];
+  if(!fn)return;
+  for(const [name,button] of tabButtons){const active=name===label;button.classList.toggle('is-active',active);button.setAttribute('aria-selected',String(active));}
+  const [title,help]=descriptions[label];sectionTitle.textContent=title;sectionHelp.textContent=help;
+  status.textContent='';panel.replaceChildren(el('div',{class:'exam-hub__loading'},'Loading '+title+'…'));
+  fn().then(()=>refreshSummary()).catch(e=>{panel.replaceChildren();err(e);});
+ }
+ function show(label,fn){selectTab(label);}
+ const navItems=trainer?[
+  ['Question Bank','▤','Organize files'],
+  ['Examinations','▣','Drafts & assignments'],
+  ['Results','▥','Scores & attempts'],
+  ['Take Exam','▶','Preview employee view']
+ ]:[['Take Exam','▶','My assigned exams']];
+ for(const [label,icon,sub] of navItems){
+  const button=el('button',{class:'exam-hub__tab',type:'button',role:'tab','aria-selected':'false',onclick:()=>selectTab(label)},el('span',{class:'exam-hub__tab-icon'},icon),el('span',{class:'exam-hub__tab-label'},el('strong',{},label),el('small',{},sub)));
+  tabButtons.set(label,button);tabs.append(button);
+ }
+ tabs.classList.add('exam-hub__tabs');tabs.setAttribute('role','tablist');
+ root.append(el('div',{class:'stack exam-workspace exam-hub'},heading,...(trainer?[summary]:[]),tabs,sectionHead,status,panel));
+ selectTab(trainer?'Question Bank':'Take Exam');
 }
