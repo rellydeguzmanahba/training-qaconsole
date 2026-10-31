@@ -110,20 +110,24 @@ export function renderExamGenerator(root, ctx) {
         const opts=Array.from({length:4},(_,j)=>{const v=input('Choice '+String.fromCharCode(65+j));v.value=q.choices[j]||'';return v;});
         const answer=el('select',{class:'input'},el('option',{value:''},'Select verified correct answer'),...[0,1,2,3].map(j=>el('option',{value:j},String.fromCharCode(65+j))));
         answer.value=q.correct_index===null?'':String(q.correct_index);
-        const category=input('Category');category.value=q.topic;
+        const category=input('Topic (optional)');category.value=q.topic;
         return {text,opts,answer,category,card:el('article',{class:'card stack exam-review__question-card'},el('div',{class:'exam-review__question-heading'},el('span',{class:'exam-review__question-number'},'QUESTION '+String(i+1).padStart(2,'0')),el('span',{class:'exam-review__question-tag'},'Review required')),el('div',{class:'exam-review__question-content'},field('Question text',text),el('div',{class:'exam-review__choices'},...opts.map((o,j)=>field('Choice '+String.fromCharCode(65+j),o))),el('div',{class:'exam-review__answer-area'},field('✓ Correct answer (required)',answer),field('Topic / Category',category))))};
       });
+      const batchName=input('Question Bank folder / upload category');
+      batchName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();
       const examName=input('Examination title');
       examName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();
       const examPassing=input('Passing score (%)','number');examPassing.value='80';
       const examDuration=input('Duration (minutes)','number');examDuration.value='60';
       const examAttempts=input('Allowed attempts','number');examAttempts.value='1';
-      const settings=el('section',{class:'card stack exam-review__settings'},el('h3',{},'Examination draft details'),field('Examination title',examName),el('div',{class:'exam-review__settings-grid'},field('Passing score (%)',examPassing),field('Duration (minutes)',examDuration),field('Allowed attempts',examAttempts)),el('p',{class:'muted small'},'Importing creates one draft examination. You can assign technicians and activate it afterward.'));
+      const settings=el('section',{class:'card stack exam-review__settings'},el('h3',{},'Examination draft details'),field('Question Bank category (file name)',batchName),field('Examination title',examName),el('div',{class:'exam-review__settings-grid'},field('Passing score (%)',examPassing),field('Duration (minutes)',examDuration),field('Allowed attempts',examAttempts)),el('p',{class:'muted small'},'Importing creates one draft examination. You can assign technicians and activate it afterward.'));
       const save=btn('Import Examination',async()=>{
         try{
           const payload=editors.map(x=>({question:x.text.value.trim(),choices:x.opts.map(o=>o.value.trim()),correct_index:x.answer.value===''?null:Number(x.answer.value),topic:x.category.value.trim()||'General',difficulty:'medium'}));
           const bad=payload.findIndex(q=>!q.question||q.choices.length!==4||q.choices.some(x=>!x)||q.correct_index===null);
           if(bad>=0){editors[bad].card.scrollIntoView({behavior:'smooth',block:'start'});editors[bad].card.classList.add('exam-review__invalid');editors[bad].answer.focus({preventScroll:true});throw Error('Review question '+(bad+1)+': all choices and a verified correct answer are required.');}
+          const batch=batchName.value.trim();if(!batch||batch.length>120)throw Error('Enter a Question Bank category (maximum 120 characters).');
+          payload.forEach(q=>q.topic=batch);
           const title=examName.value.trim(),passing=Number(examPassing.value),duration=Number(examDuration.value),attempts=Number(examAttempts.value);
           if(!title||title.length>160)throw Error('Enter an examination title (maximum 160 characters).');
           if(!Number.isFinite(passing)||passing<1||passing>100)throw Error('Passing score must be 1–100%.');
@@ -156,29 +160,73 @@ export function renderExamGenerator(root, ctx) {
     }catch(e){err(e);}finally{file.value='';}
   };
   const list=el('section',{class:'card stack exam-bank'});
-  const search=input('Search questions or answers','search');
+  const search=input('Search question content','search');
   search.setAttribute('aria-label','Search Question Bank');
-  const group=el('select',{class:'input','aria-label':'Filter by imported examination'},el('option',{value:'all'},'All examination batches'),...examRecords.map(e=>el('option',{value:e.id},e.title)));
-  const counter=el('p',{class:'muted small'});
-  const items=el('div',{class:'stack exam-bank__items'});
-  const links=new Map();
-  linked.forEach(x=>{if(!links.has(x.question_id))links.set(x.question_id,new Set());links.get(x.question_id).add(x.exam_id);});
+  const count=el('p',{class:'muted small'});
+  const folders=el('div',{class:'stack exam-bank__folders'});
+  const linkMap=new Map();
+  linked.forEach(x=>{if(!linkMap.has(x.question_id))linkMap.set(x.question_id,new Set());linkMap.get(x.question_id).add(x.exam_id);});
+  const linkedExam=new Map(examRecords.map(x=>[x.id,x]));
+  const categoryFor=q=>{
+    const names=[...(linkMap.get(q.id)||[])].map(id=>linkedExam.get(id)?.title).filter(Boolean);
+    if(q.topic&&q.topic!=='General'&&q.topic!=='Imported PDF')return q.topic;
+    return names[0]||'Uncategorized / Manual Questions';
+  };
   const draw=()=>{
-    const term=search.value.trim().toLowerCase(),selected=group.value;
-    const visible=qs.filter(q=>(selected==='all'||(selected==='unassigned'?!links.has(q.id):links.get(q.id)?.has(selected)))&&(!term||[q.question,q.topic,...q.choices].some(v=>String(v).toLowerCase().includes(term))));
-    counter.textContent=visible.length+' of '+qs.length+' questions shown';
-    items.replaceChildren();
-    if(!visible.length){items.append(el('p',{class:'muted'},'No matching questions. Try another batch or search term.'));return;}
-    visible.forEach((q,i)=>{
-      const details=el('details',{class:'exam-bank__question'},
-        el('summary',{},el('span',{class:'exam-bank__index'},String(i+1).padStart(2,'0')),el('span',{class:'exam-bank__question-text'},q.question),el('span',{class:'exam-bank__topic'},q.topic)),
-        el('div',{class:'exam-bank__question-body'},el('ol',{},q.choices.map((c,j)=>el('li',{class:j===q.correct_index?'exam-bank__correct':''},c+(j===q.correct_index?' ✓':'')))),el('div',{class:'row'},btn(q.active?'Deactivate question':'Reactivate question',async()=>{try{const {error}=await sb.from('exam_questions').update({active:!q.active}).eq('id',q.id);if(error)throw error;await questions();}catch(e){err(e);}}))));
-      items.append(details);
+    const term=search.value.trim().toLowerCase(),batches=new Map();
+    qs.forEach(q=>{
+      const name=categoryFor(q);
+      if(term&&![name,q.question,...q.choices].some(v=>String(v).toLowerCase().includes(term)))return;
+      if(!batches.has(name))batches.set(name,[]);
+      batches.get(name).push(q);
+    });
+    folders.replaceChildren();
+    const matched=[...batches.values()].reduce((n,items)=>n+items.length,0);
+    count.textContent=batches.size+' categories · '+matched+' questions';
+    if(!batches.size){folders.append(el('p',{class:'muted'},'No matching categories or questions.'));return;}
+    [...batches.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([name,items])=>{
+      const body=el('div',{class:'stack exam-bank__folder-body'});
+      items.forEach((q,i)=>{
+        const remove=btn('Delete question',async event=>{
+          event?.stopPropagation?.();
+          try{
+            const associations=linkMap.get(q.id);
+            if(associations?.size)throw Error('This question belongs to an examination. Delete its draft examination first, then remove the question from the Question Bank.');
+            if(!confirm('Permanently delete this question from "'+name+'"?'))return;
+            const {error}=await sb.from('exam_questions').delete().eq('id',q.id);
+            if(error)throw error;
+            info('Question deleted.');await questions();
+          }catch(e){err(e);}
+        });
+        remove.classList.add('exam-delete__button');
+        const details=el('details',{class:'exam-bank__question'},
+          el('summary',{},el('span',{class:'exam-bank__index'},String(i+1).padStart(2,'0')),el('span',{class:'exam-bank__question-text'},q.question)),
+          el('div',{class:'exam-bank__question-body'},el('ol',{},q.choices.map((c,j)=>el('li',{class:j===q.correct_index?'exam-bank__correct':''},c+(j===q.correct_index?' ✓':'')))),el('div',{class:'row'},remove)));
+        body.append(details);
+      });
+      const batchExams=examRecords.filter(e=>e.title===name);
+      const actions=el('div',{class:'exam-bank__folder-actions'});
+      const unlinkable=items.every(q=>!linkMap.get(q.id)?.size);
+      if(unlinkable){
+        const deleteBatch=btn('Delete category and '+items.length+' questions',async()=>{
+          try{
+            if(!confirm('Permanently delete "'+name+'" and all '+items.length+' questions? This cannot be undone.'))return;
+            const ids=items.map(q=>q.id);
+            const {error}=await sb.from('exam_questions').delete().in('id',ids);
+            if(error)throw error;
+            info('Deleted category "'+name+'".');await questions();
+          }catch(e){err(e);}
+        });
+        deleteBatch.classList.add('exam-delete__button');actions.append(deleteBatch);
+      }else{
+        actions.append(el('p',{class:'muted small'},'Contains questions linked to examinations. Delete the associated draft in Examinations before deleting these questions.'));
+      }
+      const folder=el('details',{class:'exam-bank__folder'},el('summary',{},el('span',{class:'exam-bank__folder-icon'},'▣'),el('span',{class:'exam-bank__folder-title'},name),el('span',{class:'exam-bank__folder-count'},items.length+' questions')),body,actions);
+      folders.append(folder);
     });
   };
-  group.append(el('option',{value:'unassigned'},'Unassigned / manually added questions'));
-  search.addEventListener('input',draw);group.addEventListener('change',draw);
-  list.append(el('div',{class:'exam-bank__heading'},el('div',{},el('h3',{},'Browse Question Bank'),el('p',{class:'muted small'},'Questions are grouped by the examination draft created from each upload. Expand a question to see its answers.'))),el('div',{class:'exam-bank__filters'},search,group),counter,items);
+  search.addEventListener('input',draw);
+  list.append(el('div',{class:'exam-bank__heading'},el('h3',{},'Question Bank Categories'),el('p',{class:'muted small'},'Each imported file creates a named category. Open a folder to view its questions and answers.')),search,count,folders);
   draw();
   const manual=el('details',{class:'card exam-manual'},el('summary',{},'＋ Add a question manually'),editor);
   panel.append(importCard,modal,list,manual);
