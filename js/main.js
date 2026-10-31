@@ -4,7 +4,7 @@ import { getSession, signIn, signOut, fetchProfile } from './auth.js';
 import { renderLogin, renderNotice } from './ui/auth-screens.js';
 import { initSidebar } from './ui/sidebar.js';
 import { icon } from './ui/icons.js';
-import { startRouter, stopRouter, navigate } from './router.js?v=20261031exam7';
+import { startRouter, stopRouter, navigate } from './router.js?v=20261031exam8';
 import { can } from './permissions.js';
 import { toast } from './ui/toast.js';
 import { confirmDialog, showModal } from './ui/dialog.js';
