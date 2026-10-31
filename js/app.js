@@ -45,4 +45,4 @@ function showBootFailure(error) {
   boot.append(box);
 }
 
-import('./main.js?v=20261031exam3').catch(showBootFailure);
+import('./main.js?v=20261031exam4').catch(showBootFailure);
