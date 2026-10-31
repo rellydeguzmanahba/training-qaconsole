@@ -70,3 +70,27 @@ body.sidebar-collapsed #app .sidebar__clock { margin:8px 5px; padding:12px 3px; 
 body.sidebar-collapsed #app .sidebar__clock-time { font-size:.63rem; letter-spacing:-.03em; }
 body.sidebar-collapsed #app .sidebar__clock-date { display:none; }
 @media(max-width:900px) { body.sidebar-collapsed #app .sidebar__clock { margin:10px 12px 12px; padding:17px 8px; } body.sidebar-collapsed #app .sidebar__clock-time { font-size:1.35rem; letter-spacing:.015em; } body.sidebar-collapsed #app .sidebar__clock-date { display:block; } }
+
+
+/* Compact desktop navigation: prioritize all menu entries without scrolling */
+@media (min-width:901px) {
+ #app .sidebar__brand{min-height:56px;padding:10px 13px 8px;gap:9px}
+ #app .sidebar__nav{gap:0;padding:5px 8px;scrollbar-width:thin}
+ #app .sidebar__nav .nav__group{font-size:.62rem;padding:9px 9px 3px;letter-spacing:.07em}
+ #app .sidebar__nav .nav__item{padding:6px 9px;gap:10px;min-height:33px;font-size:.81rem;line-height:1.12}
+ #app .sidebar__nav .icon{width:16px;height:16px}
+ #app .sidebar__clock{margin:5px 8px!important;padding:9px 6px!important;gap:3px!important;border-radius:11px!important}
+ #app .sidebar__clock-time{font-size:1.05rem!important}
+ #app .sidebar__clock-date{font-size:.65rem!important}
+ #app .sidebar__collapse{margin:5px 8px;padding:6px;min-height:31px}
+}
+/* Short laptop screens: free extra vertical space while keeping navigation readable */
+@media (min-width:901px) and (max-height:800px){
+ #app .sidebar__brand{min-height:50px;padding:7px 12px}
+ #app .sidebar__nav .nav__group{padding:6px 9px 2px}
+ #app .sidebar__nav .nav__item{min-height:29px;padding:4px 8px;font-size:.78rem}
+ #app .sidebar__clock{padding:6px 5px!important;margin:3px 8px!important}
+ #app .sidebar__clock-time{font-size:.93rem!important}
+ #app .sidebar__clock-date{font-size:.61rem!important}
+ #app .sidebar__collapse{margin:3px 8px;padding:4px}
+}
